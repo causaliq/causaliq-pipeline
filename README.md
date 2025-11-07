@@ -1,4 +1,4 @@
-# causaliq-repo-template
+# causaliq-pipeline
 
 [![Python Support](https://img.shields.io/pypi/pyversions/zenodo-sync.svg)](https://pypi.org/project/zenodo-sync/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -31,7 +31,7 @@ This section provides instructions for **creating a completely new CausalIQ repo
 
 ### Create the new repo on GitHub
 
-- Create the new repo with name causaliq-newcapability specifying **this repository (i.e. causaliq-repo-template) as the template** with an initial commit message "feat: initial project setup from causaliq-repo-template"
+- Create the new repo with name causaliq-newcapability specifying **this repository (i.e. causaliq-pipeline) as the template** with an initial commit message "feat: initial project setup from causaliq-pipeline"
 
 ### Clone the new repo locally and check that it works
 
@@ -48,25 +48,25 @@ scripts/setup-env -Install
 scripts/activate 311
 ```
 
-Check that the causaliq-repo-template CLI is working, check that all CI tests pass, and start up the local mkdocs webserver. There should be no errors  reported in any of these.
+Check that the causaliq-pipeline CLI is working, check that all CI tests pass, and start up the local mkdocs webserver. There should be no errors  reported in any of these.
 
 ```text
-causaliq-repo-template --help
+causaliq-pipeline --help
 scripts/check_ci
 mkdocs serve
 ```
 
 Enter **http://127.0.0.1:8000/** in a browser and check that the 
-causaliq-repo-template skeleton documentation is visible.
+causaliq-pipeline skeleton documentation is visible.
 
 ### Change all references in package to new package name
 
 In the IDE (e.g. VSCode) editor make the following GLOBAL changes to all files and folder names
 
-- replace **causaliq-repo-template** with **causaliq-newcapability** in all files
-- replace **causaliq_repo_template** with **causaliq_newcapability** in all files
-- rename folder **src/causaliq_repo_template** to **src/causaliq_newcapability**
-- manually delete all folders under venv (which will contain references to the causaliq-repo-template)
+- replace **causaliq-pipeline** with **causaliq-newcapability** in all files
+- replace **causaliq_pipeline** with **causaliq_newcapability** in all files
+- rename folder **src/causaliq_pipeline** to **src/causaliq_newcapability**
+- manually delete all folders under venv (which will contain references to the causaliq-pipeline)
 
 ⚠️ **Important**: Make sure to use underscores for Python package names (`causaliq_newcapability`) and hyphens for repo names (`causaliq-newcapability`)
 

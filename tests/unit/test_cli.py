@@ -3,7 +3,7 @@
 from click.testing import CliRunner
 from pytest import fixture
 
-from causaliq_repo_template.cli import cli
+from causaliq_pipeline.cli import cli
 
 
 @fixture
@@ -23,7 +23,7 @@ def test_cli_help(runner):
     result = runner.invoke(cli, ["--help"])
     assert result.exit_code == 0
     assert (  # NOTE: the (crt) optional name not present when called this way
-        "Usage: causaliq-repo-template [OPTIONS] NAME" in result.output
+        "Usage: causaliq-pipeline [OPTIONS] NAME" in result.output
     )
     assert "Simple CLI example." in result.output
     assert "NAME is the person to greet" in result.output
