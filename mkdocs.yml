@@ -33,7 +33,13 @@ extra_css:
 
 nav:
   - Home: index.md
-  - Architecture: architecture.md
+  - Requirements: 
+    - Feature List: feature_list.md
+    - Example Workflows: example_workflows.md
+  - Architecture: technical_architecture.md
+  - LLM Support:
+    - LLM Communication: llm_communication_guide.md
+    - Package specifics: development_practices.md
   - API Reference: api.md
 
 plugins:

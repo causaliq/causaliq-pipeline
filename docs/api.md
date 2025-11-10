@@ -1,3 +1,3 @@
 # API Reference
 
-<!-- >::: causaliq_template_repo.cli -->
+::: causaliq_pipeline.cli

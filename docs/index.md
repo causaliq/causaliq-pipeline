@@ -1,50 +1,40 @@
-# [Title for causaliq-pipeline]
+# Documentation Structure
 
-<!-- add in coverage and CI badges when repo is public -->
+This directory contains focused documentation for causaliq-pipeline development.
 
-![Python Versions](https://img.shields.io/badge/python-3.9%2C%203.10%2C%203.11%2C%203.12-blue)
+## Essential Documents
 
-## Welcome
+### 📋 **Start Here**
+- **[Requirements](feature_list.md)** - Three-month implementation plan with specific deliverables
+- **[Example Workflows](example_workflows.md)** - Series-based workflow examples
 
-Welcome to the documentation for [**causaliq-pipeline**] — [... briefly describe the purpose]
+### 🔧 **Design**
+- **[Technical Architecture](technical_architecture.md)** - Core components for three-month plan
 
----
+### 📖 **Development Support**
+- **[Development Practices](development_practices.md)** - Pipeline-specific coding standards
+- **[LLM Communication Guide](llm_communication_guide.md)** - Working with LLMs on this project
 
-## Overview
 
-causaliq-pipeline is designed for [... more details about functionality]
-This site provides detailed documentation, architectural vision, design notes, and API reference for users and contributors.
+## Quick Navigation
 
----
+### For Design Work
+Start with: **Technical Architecture** → **Feature List**
 
-## Quickstart & Installation
+### For Understanding Requirements
+Start with: **Feature List** → **Example Workflows**
 
-For a quickstart guide and installation instructions, see the [README on GitHub](https://github.com/causaliq/causaliq-pipeline#readme).
+### For LLM Collaboration
+Use the templates in: **LLM Communication Guide**
 
----
+## Document Purpose Summary
 
-## Documentation Contents
+| Document | Purpose | When to Use |
+|----------|---------|-------------|
+ `feature_list.md` | Specific features by phase | Feature development |
+| `example_workflows.md` | YAML workflow examples | Understanding series concept |
+| `technical_architecture.md` | Package architecture | Building components |
+| `development_practices.md` | Pipeline-specific coding practices | Building components |
+| `llm_communication_guide.md` | LLM collaboration patterns | Getting help from LLMs |
 
-- [Architecture](architecture.md): Learn about the overall architectire of causaliq-pipeline
-- [API Reference](api.md): Full Python API documentation.
-- [Contributing Guidelines](https://github.com/causaliq/causaliq-pipeline/blob/main/CONTRIBUTING.md)
-- [Changelog](https://github.com/causaliq/causaliq-pipeline/blob/main/CHANGELOG.md)
-- [License](https://github.com/causaliq/causaliq-pipeline/blob/main/LICENSE)
-
----
-
-## Support & Community
-
-- [GitHub Issues](https://github.com/causaliq/causaliq-pipeline/issues): Report bugs or request features.
-- [GitHub Discussions](https://github.com/causaliq/causaliq-pipeline/discussions): Ask questions and join the community.
-
----
-
-**Tip:**  
-Use the navigation sidebar to explore the documentation.  
-For the latest code and releases, visit the [causaliq-pipeline GitHub repository](https://github.com/causaliq/causaliq-pipeline).
-
----
-
-**Supported Python Versions**: 3.9, 3.10, 3.11, 3.12  
-**Default Python Version**: 3.11
+This streamlined structure focuses on actionable implementation guidance while avoiding document redundancy.

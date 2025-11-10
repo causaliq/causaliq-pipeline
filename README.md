@@ -3,99 +3,147 @@
 [![Python Support](https://img.shields.io/pypi/pyversions/zenodo-sync.svg)](https://pypi.org/project/zenodo-sync/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-This is a template for **creating new CausalIQ repos** which provides a new **capability** and follows CausalIQ development practices.
+**Workflow orchestration for causal discovery experiments** within the [CausalIQ ecosystem](https://github.com/causaliq/causaliq). Coordinates causal discovery algorithms using DASK and YAML configuration with a focus on series-based experiment organization.
 
 ## Status
 
-🚧 **Active Development** - This repository is currently in active development. It will be updated periodically to align with the latest approaches used in CausalIQ repos. New repos within the CausalIQ project should follow the naming convention causaliq-[capability], e.g. "causaliq-discovery" or "causaliq-analysis".
+🚧 **Active Development** - Currently implementing core framework (Month 1 of 3-month plan). See [Development Roadmap](docs/development_roadmap.md) for detailed timeline.
 
+## Quick Overview
 
-## Features
+causaliq-pipeline orchestrates causal discovery experiments using:
+- **Series concept**: Organize experiments across datasets, algorithms, and parameters
+- **YAML configuration**: Define workflows with inheritance and validation
+- **DASK execution**: Parallel execution with resource management
+- **External integration**: R (bnlearn), Java (Tetrad), and Python packages
+- **LLM coordination**: Integration with causaliq-llm for model averaging
 
-- 📁 **Standardised project structure**: following current best practices
-- ⌨️ **CLI Interface**: An initial dummy command-line interface.
-- 📖 **Documentation framework**: using mkdocs with shared CausalIQ branding.
-- 🐍 **Python setup**: providing virtual environments for Python 3.9, 3.10, 3.11 and 3.12.
-- 🔬 **pytest test framework**: for unit, functional and integration testing including code coverage.
-- 🔄 **Continuous Integration testing**: across Python versions and operating systems using GitHub actions 
+## Three-Month Implementation Plan
 
+### Phase 1 (Month 1): Foundation ✅ Current Focus
+- YAML workflow configuration with validation
+- Series concept for experiment organization  
+- Basic DASK integration and task execution
+- Simple logging and progress monitoring
 
-## New CausalIQ repo creation
+### Phase 2 (Month 2): Integration
+- External package plugins (R bnlearn, Java Tetrad)
+- Dataset download and randomization via zenodo-sync
+- LLM integration hooks for research
+- Series-based experiment execution
 
-This section provides instructions for **creating a completely new CausalIQ repo** which offers a **new capability**. This capability will be referred to as "newcapability" in the following instructions below, but should in practice be a word which meaningfully summarises the capability e.g. "pipeline" or "score".
+### Phase 3 (Month 3): Production
+- Pause/resume workflow functionality
+- Resource monitoring and limits
+- Robust error handling and recovery
+- Foundation for existing workflow migration
+
+## Core Technologies
+
+- **DASK**: Parallel and distributed computing
+- **YAML**: Configuration with inheritance support
+- **Python 3.9-3.12**: Following CausalIQ ecosystem standards
+- **Plugin Architecture**: R, Java, and Python package integration
+
+## The "Series" Concept
+
+Central organizing principle for causal discovery experiments:
+```yaml
+series:
+  pc_experiments:
+    algorithm: "pc"
+    datasets: ["alarm", "asia"]
+    sample_sizes: [100, 500, 1000]
+    randomizations: 10
+    hyperparameters:
+      alpha: [0.01, 0.05, 0.1]
+```
+
+## Quick Start
 
 ### Prerequisites
+- Python 3.9-3.12
+- Git
+- R with bnlearn (optional, for external integration)
 
-- Git 
-- Latest stable versions of Python 3.9, 3.10. 3.11 and 3.12
-
-### Create the new repo on GitHub
-
-- Create the new repo with name causaliq-newcapability specifying **this repository (i.e. causaliq-pipeline) as the template** with an initial commit message "feat: initial project setup from causaliq-pipeline"
-
-### Clone the new repo locally and check that it works
-
-Clone the causaliq-newcapability repo locally as normal
-
+### Installation
 ```bash
-git clone https://github.com/causaliq/causaliq-newcapability.git
+git clone https://github.com/causaliq/causaliq-pipeline.git
+cd causaliq-pipeline
+
+# Set up development environment
+scripts/setup-env.ps1 -Install
+scripts/activate.ps1 311
 ```
 
-Set up the Python virtual environments and activate the Python v3.11 virtual environment.
+### Basic Usage
+```bash
+# Validate workflow configuration
+causaliq-pipeline validate example_workflow.yaml --dry-run
 
-```text
-scripts/setup-env -Install
-scripts/activate 311
+# Execute workflow (when implemented)
+causaliq-pipeline run example_workflow.yaml
+
+# Monitor progress
+causaliq-pipeline status workflow-123
 ```
 
-Check that the causaliq-pipeline CLI is working, check that all CI tests pass, and start up the local mkdocs webserver. There should be no errors  reported in any of these.
+## Example Workflow
 
-```text
-causaliq-pipeline --help
-scripts/check_ci
-mkdocs serve
+```yaml
+# pc_ges_comparison.yaml
+metadata:
+  name: "pc_ges_comparison"
+  description: "Compare PC and GES algorithms"
+
+series:
+  pc_series:
+    algorithm: "pc"
+    package: "causaliq-discovery"
+    datasets: ["alarm", "asia"]
+    sample_sizes: [500, 1000]
+    randomizations: 5
+    hyperparameters:
+      alpha: 0.05
+      
+  ges_series:
+    algorithm: "ges"
+    package: "causaliq-discovery" 
+    datasets: ["alarm", "asia"]
+    sample_sizes: [500, 1000]
+    randomizations: 5
+    hyperparameters:
+      score_type: "bic"
+
+analysis:
+  compare_series: ["pc_series", "ges_series"]
+  metrics: ["shd", "precision", "recall"]
 ```
 
-Enter **http://127.0.0.1:8000/** in a browser and check that the 
-causaliq-pipeline skeleton documentation is visible.
+## Documentation
 
-### Change all references in package to new package name
+- **[Requirements](docs/feature_list.md)** - Features and three-month implementation plan
+- **[Technical Architecture](docs/technical_architecture.md)** - Technical Architecture
+- **[Example Workflows](docs/example_workflows.md)** - Series-based workflow examples
+- **[LLM Communication Guide](docs/llm_communication_guide.md)** - Working with LLMs on this project
 
-In the IDE (e.g. VSCode) editor make the following GLOBAL changes to all files and folder names
+## Position in CausalIQ Ecosystem
 
-- replace **causaliq-pipeline** with **causaliq-newcapability** in all files
-- replace **causaliq_pipeline** with **causaliq_newcapability** in all files
-- rename folder **src/causaliq_pipeline** to **src/causaliq_newcapability**
-- manually delete all folders under venv (which will contain references to the causaliq-pipeline)
+Integrates with other CausalIQ packages:
+- **causaliq-discovery**: Core algorithms (gradual migration from monolithic repo)
+- **causaliq-llm**: LLM integration for model averaging and analysis
+- **causaliq-analysis**: Statistical analysis and metrics
+- **causaliq-experiments**: Configuration and result storage
+- **External packages**: R (bnlearn), Java (Tetrad)
 
-⚠️ **Important**: Make sure to use underscores for Python package names (`causaliq_newcapability`) and hyphens for repo names (`causaliq-newcapability`)
+## Research Context
 
-### Check newly named package works OK and commit to GitHub
-
-- Setup the virtual environments again (which will now contain the package causaliq-newcapability), and check CI testing works with te renamed package
-
-```powershell
-scripts/setup-env -Install
-scripts/check_ci
-```
-
-If all is OK, commit this to GitHub with message "refactor: package name changed to causaliq-newcapability"
+Supporting research for May 2026 paper on LLM integration for intelligent model averaging. Also preparing for migration of existing workflows from monolithic discovery repo by end 2026.
 
 
-### Start work on new package
+## License
 
-Begin implementing the functionality of this new CausalIQ package.
-
-### Checklist
-- [ ] GitHub repo created from template
-- [ ] Repo cloned locally
-- [ ] Initial tests pass
-- [ ] All references renamed
-- [ ] Folder renamed
-- [ ] venv folders deleted
-- [ ] Final tests pass
-- [ ] Changes committed
-
+MIT License - see [LICENSE](LICENSE) file.
 
 ---
 
