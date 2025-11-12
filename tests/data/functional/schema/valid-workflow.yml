@@ -1,0 +1,6 @@
+name: "Valid Basic Workflow"
+steps:
+  - name: "First step"
+    run: "echo hello"
+  - name: "Second step" 
+    uses: "some-action@v1"

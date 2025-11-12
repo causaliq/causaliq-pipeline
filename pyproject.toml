@@ -31,6 +31,8 @@ keywords = ["causaliq"]
 requires-python = ">=3.9"
 dependencies = [
     "click>=8.0.0",
+    "jsonschema>=4.0.0",
+    "PyYAML>=6.0.0",
 ]
 
 [project.optional-dependencies]
@@ -43,6 +45,8 @@ dev = [
     "flake8>=5.0.0",
     "mypy>=1.0.0",
     "types-requests>=2.32.0",
+    "types-jsonschema>=4.0.0",
+    "types-PyYAML>=6.0.0",
     "pre-commit>=2.20.0",
     "build>=0.8.0",
     "twine>=4.0.0",

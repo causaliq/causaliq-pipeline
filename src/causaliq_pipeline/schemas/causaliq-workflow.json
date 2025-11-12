@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://causaliq.com/schemas/workflow.json",
+  "title": "CausalIQ Workflow Schema",
+  "description": "Simplified GitHub Actions-style workflow for causal discovery experiments",
+  "type": "object",
+  "required": ["name", "steps"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Workflow name"
+    },
+    "steps": {
+      "type": "array",
+      "description": "List of workflow steps",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "oneOf": [
+          {
+            "required": ["run"]
+          },
+          {
+            "required": ["uses"]
+          }
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Step name"
+          },
+          "run": {
+            "type": "string",
+            "description": "Shell command to execute"
+          },
+          "uses": {
+            "type": "string",
+            "description": "Action to use"
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

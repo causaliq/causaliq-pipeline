@@ -1,0 +1,14 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Invalid Test Schema",
+    "description": "Intentionally invalid JSON Schema for testing error handling",
+    "type": "object",
+    "required": [
+        "name"
+    ],
+    "properties": {
+        "name": {
+            "type": "invalid_type"
+        }
+    }
+}
