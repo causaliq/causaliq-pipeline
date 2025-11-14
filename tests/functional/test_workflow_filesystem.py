@@ -132,3 +132,21 @@ def test_parse_workflow_file_not_found():
     assert "Workflow validation failed" in str(exc_info.value)
     # The underlying error should be about file not found
     assert "not found" in str(exc_info.value).lower()
+
+
+# Test template variable validation with invalid templates
+def test_parse_workflow_with_invalid_template_variables():
+    """Test parsing fails with invalid template variables in real file."""
+    # Get test data directory
+    test_data_dir = (
+        Path(__file__).parent.parent / "data" / "functional" / "workflow"
+    )
+    workflow_path = test_data_dir / "invalid_template_workflow.yml"
+
+    executor = WorkflowExecutor()
+    with pytest.raises(WorkflowExecutionError) as exc_info:
+        executor.parse_workflow(str(workflow_path))
+
+    error_msg = str(exc_info.value)
+    assert "Unknown template variables" in error_msg
+    assert "unknown_variable" in error_msg or "missing_alpha" in error_msg

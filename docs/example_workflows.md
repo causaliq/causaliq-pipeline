@@ -62,6 +62,46 @@ Our implementation supports flexible path templating using matrix variables:
 # ... (8 total combinations)
 ```
 
+### Template Variable Validation
+
+The workflow executor automatically validates that all template variables (`{{variable}}`) used in action parameters are available from either:
+- **Workflow properties**: `id`, `description` 
+- **Matrix variables**: Variables defined in the `matrix` section
+
+**Valid Template Usage:**
+```yaml
+id: "my-experiment-001"
+matrix:
+  dataset: ["asia", "cancer"]
+  algorithm: ["pc", "ges"]
+  
+steps:
+  - uses: "dummy-structure-learner"
+    with:
+      # These are all valid - variables exist in workflow context
+      output: "/results/{{id}}/{{dataset}}_{{algorithm}}.xml"
+      description: "Running {{algorithm}} on {{dataset}}"
+```
+
+**Invalid Template Usage (Validation Error):**
+```yaml
+id: "my-experiment-001"
+matrix:
+  dataset: ["asia", "cancer"]
+  
+steps:
+  - uses: "dummy-structure-learner"
+    with:
+      # This will cause a WorkflowExecutionError
+      output: "/results/{{unknown_variable}}/{{missing_param}}.xml"
+```
+
+**Error Message Example:**
+```
+WorkflowExecutionError: Unknown template variables: unknown_variable, missing_param
+Available context: id, description, dataset
+```
+
 ## Implemented Features
 
 ### ✅ Action Framework
@@ -74,6 +114,7 @@ Our implementation supports flexible path templating using matrix variables:
 - **YAML Parsing**: Parse and validate GitHub Actions-style workflow files
 - **Matrix Expansion**: Convert matrix variables into individual job configurations
 - **Flexible Path Templating**: User-controlled path generation with {{}} template variables
+- **Template Variable Validation**: Automatic validation of {{variable}} patterns against available context
 - **Error Propagation**: Comprehensive error handling with WorkflowExecutionError
 
 ### ✅ Schema Validation

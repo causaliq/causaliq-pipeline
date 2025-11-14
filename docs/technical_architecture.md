@@ -92,19 +92,25 @@ class WorkflowExecutor:
     """Parse and execute GitHub Actions-style workflows with matrix expansion."""
     
     def parse_workflow(self, workflow_path: Union[str, Path]) -> Dict[str, Any]:
-        """Parse workflow YAML file with validation."""
+        """Parse workflow YAML file with validation and template variable validation."""
         
     def expand_matrix(self, matrix: Dict[str, List[Any]]) -> List[Dict[str, Any]]:
         """Expand matrix variables into individual job configurations."""
         
-    def construct_paths(self, job: Dict[str, Any], data_root: str, 
-                       output_root: str, workflow_id: str) -> Dict[str, str]:
-        """Construct file paths using matrix variables and workflow config."""
+    def _extract_template_variables(self, text: Any) -> Set[str]:
+        """Extract {{variable}} patterns from strings using regex."""
+        
+    def _validate_template_variables(self, variables: Set[str], context: Set[str]) -> None:
+        """Validate template variables against available context."""
+        
+    def _collect_template_variables(self, obj: Any) -> Set[str]:
+        """Recursively collect template variables from workflow configuration."""
 ```
 
 **Current Implementation Status**: ✅ **Phase 1 Complete**
 - Parse and validate YAML workflow files
-- Matrix expansion with cartesian product generation
+- Matrix expansion with cartesian product generation  
+- Template variable validation with context checking
 - Path construction from matrix variables
 - 100% test coverage with comprehensive error handling
 

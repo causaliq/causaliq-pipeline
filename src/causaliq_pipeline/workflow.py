@@ -6,8 +6,9 @@ matrix strategy support for causal discovery experiments.
 """
 
 import itertools
+import re
 from pathlib import Path
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List, Set, Union
 
 from causaliq_pipeline.schema import (
     WorkflowValidationError,
@@ -48,6 +49,7 @@ class WorkflowExecutor:
         try:
             workflow = load_workflow_file(workflow_path)
             validate_workflow(workflow)
+            self._validate_template_variables(workflow)
             return workflow
         except WorkflowValidationError as e:
             raise WorkflowExecutionError(
@@ -94,3 +96,70 @@ class WorkflowExecutor:
             raise WorkflowExecutionError(
                 f"Matrix expansion failed: {e}"
             ) from e
+
+    def _extract_template_variables(self, text: Any) -> Set[str]:
+        """Extract template variables from a string.
+
+        Finds all {{variable}} patterns and returns variable names.
+
+        Args:
+            text: String that may contain {{variable}} patterns
+
+        Returns:
+            Set of variable names found in templates
+        """
+        if not isinstance(text, str):
+            return set()
+
+        # Pattern matches {{variable_name}} with alphanumeric, _, -
+        pattern = r"\{\{([a-zA-Z_][a-zA-Z0-9_-]*)\}\}"
+        matches = re.findall(pattern, text)
+        return set(matches)
+
+    def _validate_template_variables(self, workflow: Dict[str, Any]) -> None:
+        """Validate that all template variables in workflow exist in context.
+
+        Args:
+            workflow: Parsed workflow dictionary
+
+        Raises:
+            WorkflowExecutionError: If unknown template variables found
+        """
+        # Build available context
+        available_variables = {"id", "description"}
+
+        # Add matrix variables if present
+        if "matrix" in workflow:
+            available_variables.update(workflow["matrix"].keys())
+
+        # Collect all template variables used in workflow
+        used_variables: Set[str] = set()
+        self._collect_template_variables(workflow, used_variables)
+
+        # Check for unknown variables
+        unknown_variables = used_variables - available_variables
+        if unknown_variables:
+            unknown_list = sorted(unknown_variables)
+            available_list = sorted(available_variables)
+            raise WorkflowExecutionError(
+                f"Unknown template variables: {unknown_list}. "
+                f"Available variables: {available_list}"
+            )
+
+    def _collect_template_variables(
+        self, obj: Any, used_variables: Set[str]
+    ) -> None:
+        """Recursively collect template variables from workflow object.
+
+        Args:
+            obj: Workflow object (dict, list, or string) to scan
+            used_variables: Set to collect found variables into
+        """
+        if isinstance(obj, dict):
+            for value in obj.values():
+                self._collect_template_variables(value, used_variables)
+        elif isinstance(obj, list):
+            for item in obj:
+                self._collect_template_variables(item, used_variables)
+        elif isinstance(obj, str):
+            used_variables.update(self._extract_template_variables(obj))

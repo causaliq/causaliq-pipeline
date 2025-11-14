@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial project structure and scaffolding with environment setup, dummy CLI,
   pytest testing and CI testing on github.
+- Template variable validation for workflow files - automatic validation of {{variable}} patterns against available context (workflow properties + matrix variables) with clear error messages for unknown variables
 
 ### Changed
 - Nothing yet

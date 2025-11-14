@@ -106,24 +106,68 @@
 
 ```python
 from causaliq_pipeline import WorkflowExecutor
+from causaliq_pipeline.workflow import WorkflowExecutionError
 
 # Create executor instance
 executor = WorkflowExecutor()
 
-# Parse and validate workflow
-workflow = executor.parse_workflow("experiment.yml")
-print(f"Workflow ID: {workflow['id']}")
-print(f"Description: {workflow['description']}")
-
-# Expand matrix variables
-if "matrix" in workflow:
-    jobs = executor.expand_matrix(workflow["matrix"])
-    print(f"Generated {len(jobs)} jobs from matrix")
+try:
+    # Parse and validate workflow (includes template variable validation)
+    workflow = executor.parse_workflow("experiment.yml")
+    print(f"Workflow ID: {workflow['id']}")
+    print(f"Description: {workflow['description']}")
     
-    # Each job contains the expanded matrix variables
-    for i, job in enumerate(jobs):
-        print(f"Job {i}: {job}")
-        # Example: {'dataset': 'asia', 'algorithm': 'pc', 'alpha': 0.05}
+    # Expand matrix variables
+    if "matrix" in workflow:
+        jobs = executor.expand_matrix(workflow["matrix"])
+        print(f"Generated {len(jobs)} jobs from matrix")
+        
+        # Each job contains the expanded matrix variables
+        for i, job in enumerate(jobs):
+            print(f"Job {i}: {job}")
+            # Example: {'dataset': 'asia', 'algorithm': 'pc', 'alpha': 0.05}
+
+except WorkflowExecutionError as e:
+    if "Unknown template variables" in str(e):
+        print(f"Template validation failed: {e}")
+        # Example: "Unknown template variables: missing_var. Available context: id, dataset, algorithm"
+    else:
+        print(f"Workflow execution failed: {e}")
+```
+
+### Template Variable Validation
+
+```python
+# The WorkflowExecutor automatically validates template variables during parsing
+# Template variables ({{variable}}) are checked against:
+# - Workflow properties: id, description
+# - Matrix variables: variables defined in the matrix section
+
+# Example: Valid template usage
+valid_workflow = {
+    "id": "test-001",
+    "description": "Template validation example", 
+    "matrix": {"dataset": ["asia"], "algorithm": ["pc"]},
+    "steps": [{
+        "uses": "dummy-structure-learner",
+        "with": {
+            "output": "/results/{{id}}/{{dataset}}_{{algorithm}}.xml",
+            "description": "Processing {{dataset}} with {{algorithm}}"
+        }
+    }]
+}
+
+# Example: Invalid template usage (will raise WorkflowExecutionError)
+invalid_workflow = {
+    "id": "test-001", 
+    "matrix": {"dataset": ["asia"]},
+    "steps": [{
+        "uses": "dummy-structure-learner", 
+        "with": {
+            "output": "/results/{{unknown_var}}/result.xml"  # unknown_var not in context
+        }
+    }]
+}
 ```
 
 ### Flexible Path Configuration

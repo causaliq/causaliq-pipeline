@@ -167,3 +167,123 @@ def test_matrix_expansion_preserves_order():
 
     # First job should be first combination of first variable
     assert jobs1[0] == {"algorithm": "pc", "dataset": "asia"}
+
+
+# Test template variable extraction
+def test_extract_template_variables():
+    """Test extraction of template variables from strings."""
+    executor = WorkflowExecutor()
+
+    # Test valid template variables
+    text1 = "/results/{{id}}/{{dataset}}_{{algorithm}}.xml"
+    variables1 = executor._extract_template_variables(text1)
+    assert variables1 == {"id", "dataset", "algorithm"}
+
+    # Test no template variables
+    text2 = "/results/static/output.xml"
+    variables2 = executor._extract_template_variables(text2)
+    assert variables2 == set()
+
+    # Test single variable
+    text3 = "chart_{{dataset}}.png"
+    variables3 = executor._extract_template_variables(text3)
+    assert variables3 == {"dataset"}
+
+    # Test non-string input
+    variables4 = executor._extract_template_variables(123)
+    assert variables4 == set()
+
+
+# Test template variable validation with valid workflow
+@patch("causaliq_pipeline.workflow.validate_workflow")
+@patch("causaliq_pipeline.workflow.load_workflow_file")
+def test_parse_workflow_valid_templates(mock_load, mock_validate):
+    """Test workflow parsing with valid template variables."""
+    workflow_data = {
+        "id": "test-workflow",
+        "description": "Test workflow",
+        "matrix": {"dataset": ["asia"], "algorithm": ["pc"]},
+        "steps": [
+            {
+                "uses": "action",
+                "with": {
+                    "result": "/results/{{id}}/{{dataset}}_{{algorithm}}.xml"
+                },
+            }
+        ],
+    }
+    mock_load.return_value = workflow_data
+    mock_validate.return_value = True
+
+    executor = WorkflowExecutor()
+    result = executor.parse_workflow("test.yml")
+
+    assert result == workflow_data
+
+
+# Test template variable validation with invalid variables
+@patch("causaliq_pipeline.workflow.validate_workflow")
+@patch("causaliq_pipeline.workflow.load_workflow_file")
+def test_parse_workflow_invalid_templates(mock_load, mock_validate):
+    """Test workflow parsing fails with invalid template variables."""
+    workflow_data = {
+        "id": "test-workflow",
+        "description": "Test workflow",
+        "matrix": {"dataset": ["asia"]},
+        "steps": [
+            {
+                "uses": "action",
+                "with": {"result": "/results/{{unknown_var}}/{{dataset}}.xml"},
+            }
+        ],
+    }
+    mock_load.return_value = workflow_data
+    mock_validate.return_value = True
+
+    executor = WorkflowExecutor()
+    with pytest.raises(WorkflowExecutionError) as exc_info:
+        executor.parse_workflow("test.yml")
+
+    error_msg = str(exc_info.value)
+    assert "Unknown template variables: ['unknown_var']" in error_msg
+    assert "Available variables: ['dataset', 'description', 'id']" in error_msg
+
+
+# Test template variable validation without matrix
+@patch("causaliq_pipeline.workflow.validate_workflow")
+@patch("causaliq_pipeline.workflow.load_workflow_file")
+def test_parse_workflow_no_matrix_valid_templates(mock_load, mock_validate):
+    """Test workflow parsing with only workflow-level variables."""
+    workflow_data = {
+        "id": "simple-workflow",
+        "description": "Simple test",
+        "steps": [
+            {
+                "uses": "action",
+                "with": {"output": "/results/{{id}}_{{description}}.txt"},
+            }
+        ],
+    }
+    mock_load.return_value = workflow_data
+    mock_validate.return_value = True
+
+    executor = WorkflowExecutor()
+    result = executor.parse_workflow("test.yml")
+
+    assert result == workflow_data
+
+
+# Test malformed template variables
+def test_extract_malformed_templates():
+    """Test extraction ignores malformed template patterns."""
+    executor = WorkflowExecutor()
+
+    # Test malformed patterns (should be ignored)
+    text = "/results/{dataset}/{{}/{{incomplete}/output.xml"
+    variables = executor._extract_template_variables(text)
+    assert variables == set()
+
+    # Test mixed valid and invalid
+    text2 = "/results/{{valid}}/{invalid}/{{also_valid}}.xml"
+    variables2 = executor._extract_template_variables(text2)
+    assert variables2 == {"valid", "also_valid"}

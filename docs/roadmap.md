@@ -57,25 +57,37 @@ Last updated: 2025-11-13
 
 **Path to Functional Pipeline**: 4 focused commits to transition from framework to working research tool
 
-**Commit 1: Action Registry & Discovery**
+**Commit 1: Template Variable Validation** ✅ **COMPLETED**
+- [x] **Template extraction** - Parse `{{variable}}` patterns from action parameters
+- [x] **Context validation** - Verify template variables exist in matrix + workflow properties
+- [x] **Error reporting** - Clear errors for unknown/malformed template variables
+- [x] **Comprehensive tests** - Cover valid, invalid, and malformed template scenarios
+
+**Commit 2: Enhanced Action Interface with Matrix Context**
+- [ ] **Matrix context passing** - Actions receive complete matrix definition automatically
+- [ ] **Simplified workflows** - Remove need to specify matrix variables in `with:` clauses  
+- [ ] **Smart action capabilities** - Actions can optimize based on full matrix context (e.g., max sample size)
+- [ ] **Updated Action base class** - New signature `run(inputs, matrix_job)` with context
+
+**Commit 3: Action Registry & Discovery**
 - [ ] **ActionRegistry class** - Centralized registry for action discovery and instantiation
 - [ ] **Action registration** - Mechanism to register and lookup available actions
 - [ ] **Parameter mapping** - Map workflow `with:` blocks to action inputs
 - [ ] **Integration point** - Bridge between workflow steps and action classes
 
-**Commit 2: Step Execution Engine**  
+**Commit 4: Step Execution Engine**  
 - [ ] **Step executor** - Execute `uses:` action steps via ActionRegistry
 - [ ] **Shell command support** - Handle `run:` command execution
 - [ ] **Sequential execution** - Run workflow steps in order with context passing
 - [ ] **Error propagation** - Comprehensive error handling across workflow execution
 
-**Commit 3: CLI Enhancement**
+**Commit 5: CLI Enhancement**
 - [ ] **Workflow execution command** - `causaliq-pipeline run workflow.yml`
 - [ ] **Command-line interface** - User-friendly workflow execution from CLI
 - [ ] **Progress reporting** - Real-time feedback during workflow execution
 - [ ] **Error reporting** - Clear error messages for workflow failures
 
-**Commit 4: Concrete Action Implementation**
+**Commit 6: Concrete Action Implementation**
 - [ ] **Real algorithm action** - PC or GES structure learning with actual implementation
 - [ ] **GraphML output** - Generate real causal graphs in GraphML format
 - [ ] **Data file handling** - Read actual CSV datasets and produce results

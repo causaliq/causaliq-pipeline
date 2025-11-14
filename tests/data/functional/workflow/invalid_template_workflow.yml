@@ -1,0 +1,14 @@
+id: "invalid-template-test"
+description: "Workflow with invalid template variables for testing"
+
+matrix:
+  dataset: ["asia", "cancer"]
+  algorithm: ["pc", "ges"]
+
+steps:
+  - name: "Structure Learning"
+    uses: "dummy-structure-learner"
+    with:
+      dataset: "/experiments/data/{{dataset}}.csv"
+      result: "/experiments/results/{{id}}/{{unknown_variable}}/graph_{{dataset}}.xml"
+      alpha: "{{missing_alpha}}"
