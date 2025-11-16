@@ -8,7 +8,7 @@ without requiring real causal discovery algorithms or graph representations.
 from pathlib import Path
 from typing import Any, Dict
 
-from causaliq_pipeline.action import Action, ActionExecutionError, ActionInput
+from causaliq_workflow.action import Action, ActionExecutionError, ActionInput
 
 
 class DummyStructureLearnerAction(Action):

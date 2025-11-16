@@ -1,1 +1,1 @@
-"""Functional tests for causaliq-pipeline."""
+"""Functional tests for causaliq-workflow."""

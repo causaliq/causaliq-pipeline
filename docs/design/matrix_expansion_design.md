@@ -269,7 +269,7 @@ class DaskTaskGraphBuilder:
     def _execute_action(self, action_name: str, inputs: Dict, 
                        job_context: Dict, previous_results: Dict) -> Any:
         """Execute workflow action with proper error handling."""
-        from causaliq_pipeline.actions import ActionRegistry
+        from causaliq_workflow.actions import ActionRegistry
         
         registry = ActionRegistry()
         return registry.execute_action(action_name, inputs)

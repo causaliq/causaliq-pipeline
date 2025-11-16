@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import pytest
 
-from causaliq_pipeline.schema import WorkflowValidationError, validate_workflow
+from causaliq_workflow.schema import WorkflowValidationError, validate_workflow
 
 
 # Test WorkflowValidationError exception creation

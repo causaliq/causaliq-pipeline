@@ -22,7 +22,7 @@ class WorkflowExecutor:
 
 #### 1. Integration with Existing Schema Validation
 
-The `WorkflowExecutor` leverages the existing `causaliq_pipeline.schema` module for workflow validation:
+The `WorkflowExecutor` leverages the existing `causaliq_workflow.schema` module for workflow validation:
 
 ```python
 def parse_workflow(self, workflow_path):
@@ -208,4 +208,4 @@ results = executor.execute_dask_graph(task_graph)
 - ✅ **Schema-first design**: Leverage existing validation infrastructure
 - ✅ **Incremental functionality**: Foundation for future execution features
 
-This design provides a solid foundation for workflow execution while maintaining the incremental development approach and high quality standards established in the CausalIQ pipeline project.
+This design provides a solid foundation for workflow execution while maintaining the incremental development approach and high quality standards established in the CausalIQ Workflow project.

@@ -3,7 +3,7 @@ requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "causaliq-pipeline"
+name = "causaliq-workflow"
 dynamic = ["version"]
 description = "A template for CausalIQ repos"
 readme = "README.md"
@@ -64,17 +64,17 @@ docs = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/causaliq/causaliq-pipeline"
-Documentation = "https://github.com/causaliq/causaliq-pipeline#readme"
-Repository = "https://github.com/causaliq/causaliq-pipeline"
-"Bug Tracker" = "https://github.com/causaliq/causaliq-pipeline/issues"
+Homepage = "https://github.com/causaliq/causaliq-workflow"
+Documentation = "https://github.com/causaliq/causaliq-workflow#readme"
+Repository = "https://github.com/causaliq/causaliq-workflow"
+"Bug Tracker" = "https://github.com/causaliq/causaliq-workflow/issues"
 
 [project.scripts]
-causaliq-pipeline = "causaliq_pipeline.cli:main"
-crt = "causaliq_pipeline.cli:main"
+causaliq-workflow = "causaliq_workflow.cli:main"
+crt = "causaliq_workflow.cli:main"
 
 [tool.setuptools.dynamic]
-version = {attr = "causaliq_pipeline.__version__"}
+version = {attr = "causaliq_workflow.__version__"}
 
 [tool.setuptools.packages.find]
 where = ["src"]
@@ -84,7 +84,7 @@ where = ["src"]
 
 [tool.pytest.ini_options]
 minversion = "7.0"
-addopts = "-ra -q --strict-markers --cov=causaliq_pipeline --cov-report=term-missing --cov-report=html"
+addopts = "-ra -q --strict-markers --cov=causaliq_workflow --cov-report=term-missing --cov-report=html"
 testpaths = [
     "tests",
 ]
@@ -106,7 +106,7 @@ markers = [
 ]
 
 [tool.coverage.run]
-source = ["src/causaliq_pipeline"]
+source = ["src/causaliq_workflow"]
 omit = [
     "*/tests/*",
     "*/test_*.py",
@@ -150,7 +150,7 @@ extend-exclude = '''
 profile = "black"
 multi_line_output = 3
 line_length = 79
-known_first_party = ["causaliq_pipeline"]
+known_first_party = ["causaliq_workflow"]
 
 [tool.mypy]
 python_version = "3.9"

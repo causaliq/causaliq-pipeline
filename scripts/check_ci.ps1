@@ -84,7 +84,7 @@ if (-not $Fast) {
 if ($Fast) {
     $testResult = Test-Command "python -m pytest -v tests/unit/ tests/functional/" "Fast tests"
 } else {
-    $testResult = Test-Command "python -m pytest -v --cov=src/causaliq_pipeline --cov-report=term-missing" "Full test suite"
+    $testResult = Test-Command "python -m pytest -v --cov=src/causaliq_workflow --cov-report=term-missing" "Full test suite"
 }
 $allPassed = $allPassed -and $testResult
 

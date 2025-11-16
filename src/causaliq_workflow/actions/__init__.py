@@ -1,5 +1,5 @@
 """
-CausalIQ Pipeline Actions.
+CausalIQ Workflow Actions.
 
 This package contains workflow actions that can be used in CausalIQ workflows.
 Each action follows the GitHub Actions pattern with standardised inputs and

@@ -1,5 +1,5 @@
 """
-Workflow execution engine for CausalIQ Pipeline.
+Workflow execution engine for CausalIQ Workflow.
 
 Provides parsing and execution of GitHub Actions-style YAML workflows with
 matrix strategy support for causal discovery experiments.
@@ -10,7 +10,7 @@ import re
 from pathlib import Path
 from typing import Any, Dict, List, Set, Union
 
-from causaliq_pipeline.schema import (
+from causaliq_workflow.schema import (
     WorkflowValidationError,
     load_workflow_file,
     validate_workflow,

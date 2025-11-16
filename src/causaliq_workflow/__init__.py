@@ -1,5 +1,5 @@
 """
-causaliq-pipeline: Template package for CausalIQ repos
+causaliq-workflow: Template package for CausalIQ repos
 """
 
 # Import core functionality
@@ -10,10 +10,10 @@ __author__ = "CausalIQ"
 __email__ = "info@causaliq.com"
 
 # Package metadata
-__title__ = "causaliq-pipeline"
+__title__ = "causaliq-workflow"
 __description__ = "Template package for CausalIQ repos"
 
-__url__ = "https://github.com/causaliq/causaliq-pipeline"
+__url__ = "https://github.com/causaliq/causaliq-workflow"
 __license__ = "MIT"
 
 # Version tuple for programmatic access

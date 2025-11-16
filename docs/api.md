@@ -2,33 +2,33 @@
 
 ## Core Action Framework
 
-### causaliq_pipeline.action
+### causaliq_workflow.action
 
-::: causaliq_pipeline.action.Action
+::: causaliq_workflow.action.Action
     options:
       show_root_heading: true
       show_source: false
       heading_level: 4
 
-::: causaliq_pipeline.action.ActionInput
+::: causaliq_workflow.action.ActionInput
     options:
       show_root_heading: true
       show_source: false
       heading_level: 4
 
-::: causaliq_pipeline.action.ActionOutput
+::: causaliq_workflow.action.ActionOutput
     options:
       show_root_heading: true
       show_source: false
       heading_level: 4
 
-::: causaliq_pipeline.action.ActionExecutionError
+::: causaliq_workflow.action.ActionExecutionError
     options:
       show_root_heading: true
       show_source: false
       heading_level: 4
 
-::: causaliq_pipeline.action.ActionValidationError
+::: causaliq_workflow.action.ActionValidationError
     options:
       show_root_heading: true
       show_source: false
@@ -36,15 +36,15 @@
 
 ## Workflow Execution Engine
 
-### causaliq_pipeline.workflow
+### causaliq_workflow.workflow
 
-::: causaliq_pipeline.workflow.WorkflowExecutor
+::: causaliq_workflow.workflow.WorkflowExecutor
     options:
       show_root_heading: true
       show_source: false
       heading_level: 4
 
-::: causaliq_pipeline.workflow.WorkflowExecutionError
+::: causaliq_workflow.workflow.WorkflowExecutionError
     options:
       show_root_heading: true
       show_source: false
@@ -52,27 +52,27 @@
 
 ## Schema Validation
 
-### causaliq_pipeline.schema
+### causaliq_workflow.schema
 
-::: causaliq_pipeline.schema.WorkflowValidationError
+::: causaliq_workflow.schema.WorkflowValidationError
     options:
       show_root_heading: true
       show_source: false
       heading_level: 4
 
-::: causaliq_pipeline.schema.load_schema
+::: causaliq_workflow.schema.load_schema
     options:
       show_root_heading: true
       show_source: false
       heading_level: 4
 
-::: causaliq_pipeline.schema.validate_workflow
+::: causaliq_workflow.schema.validate_workflow
     options:
       show_root_heading: true
       show_source: false
       heading_level: 4
 
-::: causaliq_pipeline.schema.load_workflow_file
+::: causaliq_workflow.schema.load_workflow_file
     options:
       show_root_heading: true
       show_source: false
@@ -80,9 +80,9 @@
 
 ## Built-in Actions
 
-### causaliq_pipeline.actions
+### causaliq_workflow.actions
 
-::: causaliq_pipeline.actions.DummyStructureLearnerAction
+::: causaliq_workflow.actions.DummyStructureLearnerAction
     options:
       show_root_heading: true
       show_source: false
@@ -90,9 +90,9 @@
 
 ## CLI Interface
 
-### causaliq_pipeline.cli
+### causaliq_workflow.cli
 
-::: causaliq_pipeline.cli
+::: causaliq_workflow.cli
     options:
       show_root_heading: true
       show_source: false
@@ -105,8 +105,8 @@
 ### Using WorkflowExecutor
 
 ```python
-from causaliq_pipeline import WorkflowExecutor
-from causaliq_pipeline.workflow import WorkflowExecutionError
+from causaliq_workflow import WorkflowExecutor
+from causaliq_workflow.workflow import WorkflowExecutionError
 
 # Create executor instance
 executor = WorkflowExecutor()
@@ -202,7 +202,7 @@ jobs = executor.expand_matrix(workflow["matrix"])
 ### Matrix Expansion Example
 
 ```python
-from causaliq_pipeline import WorkflowExecutor
+from causaliq_workflow import WorkflowExecutor
 
 executor = WorkflowExecutor()
 
@@ -224,7 +224,7 @@ for job in jobs:
 ### Creating a Custom Action
 
 ```python
-from causaliq_pipeline.action import Action, ActionInput, ActionExecutionError
+from causaliq_workflow.action import Action, ActionInput, ActionExecutionError
 from typing import Any, Dict
 
 class MyStructureLearnerAction(Action):
@@ -279,7 +279,7 @@ class MyStructureLearnerAction(Action):
 ### Validating Workflows
 
 ```python
-from causaliq_pipeline.schema import validate_workflow, WorkflowValidationError
+from causaliq_workflow.schema import validate_workflow, WorkflowValidationError
 
 workflow_data = {
     "name": "My Experiment",
@@ -312,7 +312,7 @@ except WorkflowValidationError as e:
 ### Loading Custom Schemas
 
 ```python
-from causaliq_pipeline.schema import load_schema
+from causaliq_workflow.schema import load_schema
 from pathlib import Path
 
 # Load custom schema
@@ -339,7 +339,7 @@ validate_workflow(workflow_data, schema)
 ```python
 import pytest
 from pathlib import Path
-from causaliq_pipeline.action import ActionExecutionError
+from causaliq_workflow.action import ActionExecutionError
 
 def test_my_action_success():
     """Test successful action execution."""

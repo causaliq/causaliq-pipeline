@@ -4,8 +4,8 @@ from unittest.mock import patch
 
 import pytest
 
-from causaliq_pipeline.schema import WorkflowValidationError
-from causaliq_pipeline.workflow import WorkflowExecutionError, WorkflowExecutor
+from causaliq_workflow.schema import WorkflowValidationError
+from causaliq_workflow.workflow import WorkflowExecutionError, WorkflowExecutor
 
 
 # Test WorkflowExecutionError exception creation
@@ -16,8 +16,8 @@ def test_workflow_execution_error():
 
 
 # Test successful workflow parsing with mocked dependencies
-@patch("causaliq_pipeline.workflow.validate_workflow")
-@patch("causaliq_pipeline.workflow.load_workflow_file")
+@patch("causaliq_workflow.workflow.validate_workflow")
+@patch("causaliq_workflow.workflow.load_workflow_file")
 def test_parse_workflow_success(mock_load, mock_validate):
     """Test successful workflow parsing with valid YAML."""
     # Setup mocks
@@ -36,8 +36,8 @@ def test_parse_workflow_success(mock_load, mock_validate):
 
 
 # Test workflow parsing failure with validation error
-@patch("causaliq_pipeline.workflow.validate_workflow")
-@patch("causaliq_pipeline.workflow.load_workflow_file")
+@patch("causaliq_workflow.workflow.validate_workflow")
+@patch("causaliq_workflow.workflow.load_workflow_file")
 def test_parse_workflow_validation_error(mock_load, mock_validate):
     """Test workflow parsing fails with validation error."""
     # Setup mocks
@@ -104,7 +104,7 @@ def test_expand_matrix_single_variable():
 
 
 # Test matrix expansion exception handling
-@patch("causaliq_pipeline.workflow.itertools.product")
+@patch("causaliq_workflow.workflow.itertools.product")
 def test_expand_matrix_exception_handling(mock_product):
     """Test matrix expansion fails gracefully with unexpected errors."""
     # Setup mock to raise exception
@@ -195,8 +195,8 @@ def test_extract_template_variables():
 
 
 # Test template variable validation with valid workflow
-@patch("causaliq_pipeline.workflow.validate_workflow")
-@patch("causaliq_pipeline.workflow.load_workflow_file")
+@patch("causaliq_workflow.workflow.validate_workflow")
+@patch("causaliq_workflow.workflow.load_workflow_file")
 def test_parse_workflow_valid_templates(mock_load, mock_validate):
     """Test workflow parsing with valid template variables."""
     workflow_data = {
@@ -222,8 +222,8 @@ def test_parse_workflow_valid_templates(mock_load, mock_validate):
 
 
 # Test template variable validation with invalid variables
-@patch("causaliq_pipeline.workflow.validate_workflow")
-@patch("causaliq_pipeline.workflow.load_workflow_file")
+@patch("causaliq_workflow.workflow.validate_workflow")
+@patch("causaliq_workflow.workflow.load_workflow_file")
 def test_parse_workflow_invalid_templates(mock_load, mock_validate):
     """Test workflow parsing fails with invalid template variables."""
     workflow_data = {
@@ -250,8 +250,8 @@ def test_parse_workflow_invalid_templates(mock_load, mock_validate):
 
 
 # Test template variable validation without matrix
-@patch("causaliq_pipeline.workflow.validate_workflow")
-@patch("causaliq_pipeline.workflow.load_workflow_file")
+@patch("causaliq_workflow.workflow.validate_workflow")
+@patch("causaliq_workflow.workflow.load_workflow_file")
 def test_parse_workflow_no_matrix_valid_templates(mock_load, mock_validate):
     """Test workflow parsing with only workflow-level variables."""
     workflow_data = {

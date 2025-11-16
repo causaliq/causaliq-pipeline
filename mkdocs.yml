@@ -1,4 +1,4 @@
-site_name: causaliq-pipeline
+site_name: causaliq-workflow
 theme:
   name: material
   palette:
@@ -22,11 +22,18 @@ theme:
   font:
     text: Inter
     code: Fira Code
+
   features:
-    - navigation.tabs  # so links appear in header
-    - navigation.top   # adds a floating "to top" control
-
-
+    - navigation.tabs           # Top-level navigation tabs
+    - navigation.top            # Back to top button
+    - navigation.tabs.sticky    # Sticky navigation tabs
+    - navigation.sections       # Group navigation items
+    - navigation.expand         # Expand all sections by default
+    - navigation.footer         # Previous/next navigation
+    - search.highlight          # Highlight search terms
+    - search.share              # Share search results
+    - content.code.copy         # Copy code button
+    - content.tabs.link         # Link tabs across pages
 
 extra_css:
   - http://causaliq.org/css/mkdocs.css
@@ -41,6 +48,7 @@ nav:
     - Matrix Strategy Design: design/matrix_expansion_design.md
     - Action Architecture: design/action_architecture_design.md
     - Algorithm Registry: design/algorithm_registry_design.md
+    - Workflow Executor: design/workflow_executor_design.md
   - API Reference: api.md
 
 plugins:

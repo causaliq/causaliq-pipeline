@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from causaliq_pipeline.workflow import WorkflowExecutionError, WorkflowExecutor
+from causaliq_workflow.workflow import WorkflowExecutionError, WorkflowExecutor
 
 
 # Test parsing workflow from real YAML file

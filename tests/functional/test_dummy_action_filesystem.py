@@ -10,8 +10,8 @@ from pathlib import Path
 
 import pytest
 
-from causaliq_pipeline.action import ActionExecutionError
-from causaliq_pipeline.actions import DummyStructureLearnerAction
+from causaliq_workflow.action import ActionExecutionError
+from causaliq_workflow.actions import DummyStructureLearnerAction
 
 
 # Test action creates valid GraphML file with real filesystem

@@ -10,7 +10,7 @@ using standalone=False
 from click.testing import CliRunner
 from pytest import fixture
 
-from causaliq_pipeline.cli import cli
+from causaliq_workflow.cli import cli
 
 CLI_BASE_DIR = "tests/data/functional/cli"
 
@@ -60,8 +60,8 @@ def test_main_function(monkeypatch):
     def fake_cli(*args, **kwargs):
         called["cli"] = args != kwargs
 
-    monkeypatch.setattr("causaliq_pipeline.cli.cli", fake_cli)
-    from causaliq_pipeline.cli import main
+    monkeypatch.setattr("causaliq_workflow.cli.cli", fake_cli)
+    from causaliq_workflow.cli import main
 
     main()
     assert called.get("cli") is True

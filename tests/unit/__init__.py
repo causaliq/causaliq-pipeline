@@ -1,1 +1,1 @@
-"""Unit tests for causaliq-pipeline."""
+"""Unit tests for causaliq-workflow."""

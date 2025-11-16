@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from causaliq_pipeline.schema import (
+from causaliq_workflow.schema import (
     WorkflowValidationError,
     load_schema,
     load_workflow_file,

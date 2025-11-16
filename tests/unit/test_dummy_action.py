@@ -9,8 +9,8 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from causaliq_pipeline.action import ActionExecutionError
-from causaliq_pipeline.actions import DummyStructureLearnerAction
+from causaliq_workflow.action import ActionExecutionError
+from causaliq_workflow.actions import DummyStructureLearnerAction
 
 
 # Test action metadata attributes are correctly defined
@@ -52,7 +52,7 @@ def test_output_specifications():
 
 
 # Test successful action execution with valid inputs
-@patch("causaliq_pipeline.actions.dummy_structure_learner.Path")
+@patch("causaliq_workflow.actions.dummy_structure_learner.Path")
 def test_run_with_valid_inputs(mock_path):
     """Test successful action execution with valid inputs."""
     # Setup mocks
@@ -88,7 +88,7 @@ def test_run_with_valid_inputs(mock_path):
 
 
 # Test action execution fails with missing data file
-@patch("causaliq_pipeline.actions.dummy_structure_learner.Path")
+@patch("causaliq_workflow.actions.dummy_structure_learner.Path")
 def test_run_with_missing_data_file(mock_path):
     """Test action execution fails with missing data file."""
     # Setup mocks
@@ -114,7 +114,7 @@ def test_run_with_missing_data_file(mock_path):
 
 
 # Test action execution handles filesystem errors gracefully
-@patch("causaliq_pipeline.actions.dummy_structure_learner.Path")
+@patch("causaliq_workflow.actions.dummy_structure_learner.Path")
 def test_run_with_filesystem_error(mock_path):
     """Test action execution handles filesystem errors gracefully."""
     # Setup mocks
