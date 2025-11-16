@@ -1,31 +1,41 @@
-# causaliq-pipeline
+# causaliq-workflow
 
 [![Python Support](https://img.shields.io/pypi/pyversions/zenodo-sync.svg)](https://pypi.org/project/zenodo-sync/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-**GitHub Actions-inspired workflow orchestration for causal discovery experiments** within the [CausalIQ ecosystem](https://github.com/causaliq/causaliq). Execute causal discovery workflows using familiar CI/CD patterns with comprehensive action framework.
+**GitHub Actions-inspired workflow orchestration for causal discovery experiments** within the [CausalIQ ecosystem](https://github.com/causaliq/causaliq). Execute causal discovery workflows using familiar CI/CD patterns with conservative execution and comprehensive action framework.
 
 ## Current Implementation (v0.1.0)
 
 ✅ **Action Framework Foundation Complete** - Robust workflow orchestration with 100% test coverage
 
 ```yaml
-name: "Causal Discovery Experiment"
+description: "Causal Discovery Experiment"
 id: "experiment-001"
-data_root: "/data"
-output_root: "/results"
 
 matrix:
-  dataset: ["asia", "cancer"]
+  network: ["asia", "cancer"]
   algorithm: ["pc", "ges"]
-  alpha: [0.01, 0.05]
+  sample_size: ["100", "1K"]
 
 steps:
   - name: "Structure Learning"
-    uses: "dummy-structure-learner"
+    uses: "causaliq-discovery"
     with:
-      max_iter: 1000
+      algorithm: "{{algorithm}}"
+      sample_size: "{{sample_size}}"
+      dataset: "/data/{{network}}"
+      output: "/results/{{id}}/{{algorithm}}/{{network}}/{{sample_size}}"
 ```
+
+**Execute with modes:**
+```bash
+cwork experiment.yml --mode=dry-run    # Validate and preview (default)
+cwork experiment.yml --mode=run        # Execute (skip if outputs exist)
+cwork experiment.yml --mode=compare    # Re-execute and compare outputs
+```
+
+Note that **cwork** is a short synonym for **causaliq-workflow** which can also be used.
 
 ## Implementation Status
 
@@ -34,7 +44,6 @@ steps:
 **Completed Features**:
 - ✅ **Action Framework**: Type-safe action base classes with comprehensive error handling
 - ✅ **Schema Validation**: GitHub Actions-inspired workflow syntax with matrix support
-- ✅ **GraphML Output**: Standardized causal graph representation format
 - ✅ **Test Coverage**: 100% coverage across unit, functional, and integration tests
 - ✅ **Reference Implementation**: DummyStructureLearnerAction demonstrating framework
 
@@ -43,9 +52,11 @@ steps:
 ## Key Features
 
 - **🎯 GitHub Actions Syntax**: Familiar workflow patterns adapted for causal discovery
-- **📊 Matrix Variables**: Parameterized experiments with `data_root` and `output_root` path construction
-- **🔧 Action Components**: Reusable, versioned workflow actions with type-safe interfaces
-- **� GraphML Standard**: Consistent causal graph representation (DAGs, PDAGs, CPDAGs, MAGs, PAGs)
+- **📊 Matrix Variables**: Parameterized experiments with hierarchical output organization
+- **🔧 CausalIQ Actions**: Reusable workflow actions from causaliq-discovery, causaliq-analysis packages
+- **⚡ Conservative Execution**: Skip work if outputs exist, enabling safe restarts and efficient re-runs
+- **🛡️ Mode-Based Operation**: dry-run (validate), run (execute), compare (functional testing)
+- **🗂️ Standardized Output**: Fixed filenames by type (graph.xml, metadata.json, trace.csv)
 - **🧪 Comprehensive Testing**: Unit, functional, and integration tests with tracked test data
 
 **See detailed architecture**: [docs/technical_architecture.md](docs/technical_architecture.md)
@@ -59,24 +70,12 @@ steps:
 
 ### Installation
 ```bash
-git clone https://github.com/causaliq/causaliq-pipeline.git
-cd causaliq-pipeline
+git clone https://github.com/causaliq/causaliq-workflow.git
+cd causaliq-workflow
 
 # Set up development environment
 scripts/setup-env.ps1 -Install
 scripts/activate.ps1 311
-```
-
-### Basic Usage
-```bash
-# Validate CI workflow configuration  
-causaliq-pipeline validate algorithm_comparison.yaml
-
-# Execute workflow (when implemented)
-causaliq-pipeline run algorithm_comparison.yaml
-
-# Monitor matrix job progress
-causaliq-pipeline status workflow-123
 ```
 
 **Example workflows**: [docs/example_workflows.md](docs/example_workflows.md)
@@ -94,9 +93,9 @@ causaliq-pipeline status workflow-123
 
 Coordinates with:
 - **causaliq-discovery**: Core algorithms (integrated as package plugins)
-- **causaliq-llm**: LLM integration via action-based architecture
+- **causaliq-knowledge**: Provides knowledge, including from LLMs, via action-based architecture
 - **causaliq-analysis**: Statistical analysis actions and post-processing  
-- **causaliq-experiments**: Configuration and result storage with CI workflow metadata
+- **causaliq-papers**: Configuration and result storage for to enable reproducibility of CausalIQ papers
 
 ## Research Context
 

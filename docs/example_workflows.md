@@ -1,48 +1,243 @@
-# CausalIQ Pipeline - Example Workflows
+# CausalIQ Workflow - Example Workflows
 
-## Current Implementation Examples (v0.1.0)
+## Design Philosophy: Inspired by CI-Workflows
 
-### Basic Action Workflow
+The CausalIQ Workflows are *inspired* by the concepts within 
+Continuous Integration (CI) workflows. They provide a subset of the features 
+provided by CI workflows and much of the functionality is simplified to ease
+the job of specifying CausalIQ workflows.
 
-Our current implementation supports GitHub Actions-style workflows with action components:
+Key concepts in CausalIQ workflows are:
+
+  - Workflows are a series of one or more *sequential* **steps**.
+  - Steps can be either an **action** or they can **run** shell commands.
+  - actions execute typical causal inference and evaluation activities like structure 
+  learning, graph evaluation, causal inference etc., and actions:
+    - are implemented in other CausalIQ packages such as causaliq-discovery,        causaliq-analysis etc. as specified in the **uses:** keyword of the step;
+    - take parameters values for the action - e.g., the algorithm to use - are specified using the **with:** keyword;
+    - actions can be *implemented intelligently* to perform their work efficiently and in parallel.
+  - a **matrix** concept allows the set of steps to be repeated over multiple
+  combinations of values, for example over a set of networks, sample sizes and
+  algorithms. This is particularly valuable for large scale comparative experiments.
+  - workflows may be run from the command line interface (CLI) using commands like:
+
+    ```shell
+    cwork example_workflow.yaml --network=child,property
+    ```
+      - CLI arguments can be used to override workflow and matrix parameters so
+        that the same workflow can be easily reused;
+      - the **run:** command can be used to run a workflow so that "workflows of
+        workflows" are supported.
+
+The CausalIQ Workflow CLI has a **--mode** argument which controls its overall behaviour as follows:
+
+  - **--mode=run**: this actually executes the workflow. Note that, in this case
+ the actions in the workflow are performed *conservatively* - if the outputs of
+ actions are already present on the file system the action is *not repeated*. This
+ therefore faciltates restarting the workflow if it has previously been interrupted.
+  - **--mode=dry-run**: this is the default behaviour and reports what *would* be done if **--mode=run** were used, but does not perform the actual actions. In doing so,
+  it has the valuable side-effect of checking that the workflow definitions are
+  all valid.
+  - **--mode=compare**: all actions in the workflow will be re-run regardless of whether the output is present on the filesystem or not. If the output is present on the filesystem, the newly-generated output will replace it, and any differences with the previous version reported. This mode is therefore a very powerful form of functional testing.  
+
+## Example Workflows in Causal Discovery
+
+### Simple One-Off Structure Learning Examples
+
+The first simple example runs the Tabu-Stable structure learning algorithm on 1000 synthetic rows from the Asia network. Input and output files are generally specified in terms of
+their *location* in CausalIQ Workflows, and the filenames are fixed according to
+what kind of entity they are: a graph, metadata or trace for example.
+
+This will create a graph.xml and metadata.json file in the specified output folder. The debug switch also means that a trace.csv will be produced.
+
 
 ```yaml
-# basic_structure_learning.yaml
-id: "basic-experiment-001"
-description: "Basic structure learning with flexible paths"
+# tabu_asia.yaml
+description: "Tabu-stable learning Asia from 1K data with full trace"
 
 steps:
   - name: "Learn Structure"
-    uses: "dummy-structure-learner"
+    uses: "causaliq-discovery"
     with:
-      dataset: "/data/asia.csv"
-      result: "/results/basic-experiment-001/graph.xml"
-      algorithm: "dummy"
+      algorithm: "tabu-stable"
+      sample_size: "1k"
+      dataset: "/data/asia"
+      output: "/results/tabu-asia"
+      debug: True
+```
+
+The same result could be achieved using the causaliq-discovery CLI command directly,
+but using this simple workflow avoids having to specify the dataset, algorithm etc. on
+the command line by using the following command:
+
+```shell
+cwork tabu_asia.yaml  # cwork is a synonym for causaliq-workflow
+```
+
+This "shorthand" capability becomes especially useful when plotting charts which 
+typically require a lot of parameter values to specify axis titles, chart type and colours etc., which become unmanageable to specify on the command line.
+
+Another simple workflow might be to download resources from Zenodo. This would download all the resources associated with my PhD thesis and
+unzip in the specified output folder.
+
+```yaml
+# download_paper.yaml
+description: "Download assets for PhD Thesis"
+
+steps:
+  - name: "Download paper"
+    uses: "causaliq-papers"
+    with:
+      operation: "download"
+      doi: "10.5072/zenodo.338579"
+      output: "/papers/2025KitsonThesis"
+``` 
+
+### Parameterised Structure Learning Example
+
+We can make the simple learning example more general by adding workflow-level
+variables to parameterise the workflow. In this example, the sample_size parameter has a
+default value of 1000 if not specified on the command line, whereas the None
+value for network indicates that this must be specified on the command line. 
+Note how the network and sample_size
+parameters are used in the dataset and output action parameters so
+that the correct input file and output folder are used.
+
+```yaml
+# tabu_learning.yaml
+description: "Parameterised Tabu-stable learning"
+sample_size: "1K"
+network: None
+
+steps:
+  - name: "Learn Structure"
+    uses: "causaliq-discovery"
+    with:
+      algorithm: "tabu-stable"
+      max_time: 10
+      sample_size: {{sample_size}}
+      dataset: "/data/{{network}}"
+      output: "/results/{{network}}/{{sample_size}}"
+```
+We can now run Tabu-Stable structure learning for any network and sample size using commands like:
+
+```shell
+cwork tabu_learning.yaml --network=child --sample_size=500
+``` 
+
+### Multiple Step Examples
+
+
+We could enhance this by adding a step before structure learning where an LLM provides an initial graph. In this example, the dataset is provided so that the
+LLM has access to the values, and there is also some additional domain context provided in a json file. This could generate a graph.xml in the output folder
+and probably also some metadata and/or history of the prompts and responses 
+made to the LLM. Note that, this LLM generated graph would then be available
+to be re-used in other experiments, and the prompts/response trail provides the
+means to exactly replicate this result.
+
+```yaml
+# tabu_llm_learning.yaml
+description: "Tabu-stable learning Asia with LLM initialisation"
+sample_size: "1K"
+network: None
+
+steps:
+  - name: "LLM Graph Initialisation"
+    uses: "causaliq-knowledge"
+    with:
+      operation: "propose-graph"
+      dataset: "/data/{{network}}"
+      context: "/knowledge/context/{{network}}"
+      output: "/knowledge/llm_graphs/{{network}}"
+
+  - name: "Learn Structure"
+    uses: "causaliq-discovery"
+    with:
+      initial_graph: "/knowledge/llm_graphs/asia"
+      # etc ....
+```
+
+Alternatively, or additionally, we can add some steps after structure learning
+to compute some graph metrics and visualise the way that the graph was learnt.
+
+The "Evaluate graph" step requires the bic-score which needs the dataset to be specified, and F1 needs the true graph to be supplied - the relevant causaliq-analysis action is responsible for checking that these kind of dependencies are satisified. The results folder is specified where the learnt graph and learning metadata is, and so these results are appended to the metadata.
+
+```yaml
+# learn_and_evaluate.yaml
+
+# workflow variables ... 
+
+steps:
+
+  # step(s) to learn graph ...
+
+  - name: "Evaluate graph"
+    uses: "causaliq-analysis"
+    with:
+      operation: "evaluate-graph"
+      dataset: "/data/{{network}}"
+      true_graph: "/knowledge/true_graph/{{network}}"
+      metrics: ["bic-score", "f1", "scaled-shd"]
+      basis: ["cpdag"]
+      graph: "/results/{{network}}/{{sample_size}}"
 ```
 
 ### Matrix Strategy Workflow
 
-The implemented schema supports matrix variables for parameterized experiments:
+In many cases we will wish to run comparative experiments with a different result for each combinations of algorithm, network, and sample size and randomisation. Note how we structure the output folder path so that we ensure the result for each individual experiment is placed in its own folder. We also use an "id" workflow variablesto keep these results separate from those of other workflows.
+
+Internally, the action - in this case causal-discovery - may be implemented intelligently to maximise efficiency. For example, in this case, it may read
+the maximum number of rows from the filesystem dataset just once, and then adjust the effective sample size and randomisation internally for each individual experiment.
 
 ```yaml
 # matrix_experiment.yaml
-id: "algo-comparison-001"
-description: "Algorithm comparison with flexible path templating"
+id: "stability001"
+description: "Algorithm stability comparison"
+randomise: ["variable_order", "variable_name"]
 
 matrix:
-  dataset: ["asia", "cancer"]
+  network: ["asia", "cancer"]
   algorithm: ["pc", "ges"]
-  alpha: [0.01, 0.05]
+  sample_size: ["100", "1K"]
+  seed: [1, 25]
 
 steps:
   - name: "Structure Learning"
-    uses: "dummy-structure-learner"
+    uses: "causaliq-discovery"
     with:
-      dataset: "/experiments/data/{{dataset}}.csv"
-      result: "/experiments/results/{{id}}/{{algorithm}}/graph_{{dataset}}_{{alpha}}.xml"
-      alpha: "{{alpha}}"
-      max_iter: 1000
+      algorithm: "{{algorithm}}"
+      sample_size: "{{sample_size}}"
+      dataset: "/data/{{network}}"
+      randomise: {{randomise}}
+      seed: {{seed}}
+      output: "/results/{{id}}/{{algorithm}}/{{network}}/{{sample_size}}/{{seed}}"
 ```
+
+### Workflow of workflows
+
+The ability of one workflow to call other parameterised workflows facilitates the creation and testing of complex CausalIQ workflows, for instance to run
+all the experiments, analysis and asset generation for a research paper or thesis. CausalIQ Papers makes use of this to provide reproducibility of CausalIQ published papers.
+
+The example below shows a simple top level workflow which might reproduce the experiments and analysis behind a thesis. The lower level workflows such as create_chapter_4.yaml might then call other workflows to perform the structure learning, result analysis and asset generation for Chapter 4.
+
+```yaml
+# reproduce_thesis.yaml
+
+id: "Kitson2025thesis"
+
+matrix:
+  chapter: [4, 5, 6]
+
+steps:
+  name: "Create chapter {{chapter}}"
+  run: "cwork create_chapter_{{chapter}}.yaml --id={{id}}
+```
+
+### Parallel Jobs
+
+CI workflows provide a **jobs:** keyword which allows multiple sequences of steps to run in parallel. We are not planning to implement this at the moment, instead relying on actions to provde parallelism using DAK tasks. This keeps CausalIQ Workflow functionality simple and reflects the fact that structure learning steps involving many individual structure learning experiments can keep even very powerful machines busy.
+
+## Template Variables
 
 ### Flexible Path Templating Pattern
 
@@ -51,13 +246,13 @@ Our implementation supports flexible path templating using matrix variables:
 ```yaml
 # Template variables can be used in action parameters:
 # {{id}} - workflow identifier
-# {{dataset}} - current matrix value for dataset
+# {{network}} - current matrix value for network
 # {{algorithm}} - current matrix value for algorithm  
-# {{alpha}} - current matrix value for alpha
+# {{sample_size}} - current matrix value for sample size
 
-# Example expansion for matrix above:
-# Job 1: dataset="/experiments/data/asia.csv", result="/experiments/results/algo-comparison-001/pc/graph_asia_0.01.xml"
-# Job 2: dataset="/experiments/data/asia.csv", result="/experiments/results/algo-comparison-001/pc/graph_asia_0.05.xml"
+# Example expansion for graphs using matrix above:
+# Job 1: dataset="/experiments/data/asia.csv", result="/experiments/results/algo-comparison-001/pc/asia/100"
+# Job 2: dataset="/experiments/data/asia.csv", result="/experiments/results/algo-comparison-001/pc/asia/1K"
 # Job 3: dataset="/experiments/data/asia.csv", result="/experiments/results/algo-comparison-001/ges/graph_asia_0.01.xml"
 # ... (8 total combinations)
 ```
@@ -79,7 +274,7 @@ steps:
   - uses: "dummy-structure-learner"
     with:
       # These are all valid - variables exist in workflow context
-      output: "/results/{{id}}/{{dataset}}_{{algorithm}}.xml"
+      output: "/results/{{id}}/{{dataset}}_{{algorithm}}"
       description: "Running {{algorithm}} on {{dataset}}"
 ```
 
@@ -93,7 +288,7 @@ steps:
   - uses: "dummy-structure-learner"
     with:
       # This will cause a WorkflowExecutionError
-      output: "/results/{{unknown_variable}}/{{missing_param}}.xml"
+      output: "/results/{{unknown_variable}}/{{missing_param}}"
 ```
 
 **Error Message Example:**
@@ -176,7 +371,7 @@ class DummyStructureLearnerAction(Action):
 ### WorkflowExecutor Implementation (Phase 1 Complete)
 
 ```python
-from causaliq_pipeline import WorkflowExecutor
+from causaliq_workflow import WorkflowExecutor
 
 # Parse workflow and expand matrix
 executor = WorkflowExecutor()
@@ -383,7 +578,7 @@ series:
 # LLM integration for analysis
 llm_analysis:
   stage: "post_discovery"
-  package: "causaliq-llm"
+  package: "causaliq-knowledge"
   tasks:
     - task: "analyze_algorithm_outputs"
       inputs: ["pc_results", "ges_results"]
@@ -458,38 +653,38 @@ analysis:
 ### Basic Execution
 ```bash
 # Execute a series-based workflow
-causaliq-pipeline run pc_ges_comparison.yaml
+causaliq-workflow run pc_ges_comparison.yaml
 
 # Dry-run to preview execution plan
-causaliq-pipeline validate pc_ges_comparison.yaml --dry-run
+causaliq-workflow validate pc_ges_comparison.yaml --dry-run
 
 # Monitor running workflow
-causaliq-pipeline status workflow-abc123
+causaliq-workflow status workflow-abc123
 
 # Pause running workflow
-causaliq-pipeline pause workflow-abc123
+causaliq-workflow pause workflow-abc123
 
 # Resume paused workflow  
-causaliq-pipeline resume workflow-abc123
+causaliq-workflow resume workflow-abc123
 ```
 
 ### Advanced Options
 ```bash
 # Override resource limits
-causaliq-pipeline run experiment.yaml --max-jobs 16 --memory-per-job 8GB
+causaliq-workflow run experiment.yaml --max-jobs 16 --memory-per-job 8GB
 
 # Run specific series only
-causaliq-pipeline run experiment.yaml --series pc_series
+causaliq-workflow run experiment.yaml --series pc_series
 
 # Export results in specific format
-causaliq-pipeline results export workflow-abc123 --format csv --output results/
+causaliq-workflow results export workflow-abc123 --format csv --output results/
 ```
 
 ## Python API Examples
 
 ### Basic Workflow Execution
 ```python
-from causaliq_pipeline import WorkflowManager, ConfigurationManager
+from causaliq_workflow import WorkflowManager, ConfigurationManager
 
 # Load and validate configuration
 config_manager = ConfigurationManager()
@@ -506,7 +701,7 @@ ges_results = result.get_series_results("ges_series")
 
 ### Series Analysis
 ```python
-from causaliq_pipeline.analysis import SeriesComparison
+from causaliq_workflow.analysis import SeriesComparison
 
 # Compare algorithm performance across series
 comparison = SeriesComparison()
@@ -523,7 +718,7 @@ comparison.export_results("algorithm_comparison.csv")
 
 ### Configuration Inheritance
 ```python
-from causaliq_pipeline.config import ConfigurationInheritance
+from causaliq_workflow.config import ConfigurationInheritance
 
 # Create experiment based on template
 inheritance = ConfigurationInheritance()
@@ -545,7 +740,7 @@ specific_config = inheritance.create_derived(
 
 This focused approach emphasizes the series concept and immediate implementation needs while providing practical examples for the three-month development phase.
 
-## Use Case 2: Production Causal Inference Pipeline
+## Use Case 2: Production Causal Inference Workflow
 
 ### Scenario
 A business wants to continuously analyze the causal impact of marketing campaigns on customer behavior using streaming data.
@@ -631,7 +826,7 @@ steps:
     outputs: ["anomalies", "alerts"]
 
   - name: "automated_insights"
-    package: "causaliq-pipeline"
+    package: "causaliq-workflow"
     method: "llm_generate_insights"
     depends_on: ["intervention_effects", "anomaly_detection"]
     parameters:
@@ -700,7 +895,7 @@ steps:
     outputs: ["data_summary", "correlations"]
 
   - name: "llm_initial_consultation"
-    package: "causaliq-pipeline"
+    package: "causaliq-workflow"
     method: "llm_domain_consultation"
     depends_on: ["initial_analysis"]
     parameters:
@@ -734,7 +929,7 @@ steps:
         outputs: ["evaluation_metrics"]
 
       - name: "llm_feedback"
-        package: "causaliq-pipeline"
+        package: "causaliq-workflow"
         method: "llm_evaluate_graph"
         parameters:
           domain: ${parameters.domain}
@@ -757,7 +952,7 @@ steps:
         outputs: ["refined_graphs"]
 
   - name: "final_interpretation"
-    package: "causaliq-pipeline"
+    package: "causaliq-workflow"
     method: "llm_comprehensive_interpretation"
     depends_on: ["iterative_refinement"]
     parameters:
@@ -777,29 +972,29 @@ notebook_integration:
 
 ```bash
 # Execute a workflow
-causaliq-pipeline run workflow.yaml --config production.yaml
+causaliq-workflow run workflow.yaml --config production.yaml
 
 # Validate workflow before execution
-causaliq-pipeline validate workflow.yaml
+causaliq-workflow validate workflow.yaml
 
 # Interactive mode
-causaliq-pipeline interactive --domain healthcare --data patient_data.csv
+causaliq-workflow interactive --domain healthcare --data patient_data.csv
 
 # Monitor running workflow
-causaliq-pipeline status workflow-123
+causaliq-workflow status workflow-123
 
 # Generate workflow template
-causaliq-pipeline template --type discovery --domain finance
+causaliq-workflow template --type discovery --domain finance
 
 # List available packages and methods
-causaliq-pipeline list-methods --package causaliq-discovery
+causaliq-workflow list-methods --package causaliq-discovery
 ```
 
 ## Integration Examples
 
 ### Python API Usage
 ```python
-from causaliq_pipeline import WorkflowEngine, DaskClusterManager
+from causaliq_workflow import WorkflowEngine, DaskClusterManager
 
 # Set up DASK cluster
 cluster_manager = DaskClusterManager()

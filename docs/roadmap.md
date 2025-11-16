@@ -1,4 +1,4 @@
-# CausalIQ Pipeline - Development Roadmap & Progress
+# CausalIQ Workflow - Development Roadmap & Progress
 
 **Single source of truth for all development planning and progress tracking**
 
@@ -22,7 +22,7 @@ Last updated: 2025-11-13
 
 ### ✅ Foundation Infrastructure [COMPLETED] 
 - [x] **Testing framework** - Comprehensive pytest setup covering unit, functional, integration (47/47 tests passing)
-- [x] **CI/CD pipeline** - GitHub Actions workflow with linting, formatting, type checking
+- [x] **CI/CD workflow** - GitHub Actions workflow with linting, formatting, type checking
 - [x] **Code quality** - Black, isort, flake8, MyPy integration with 100% compliance
 - [x] **Documentation structure** - MkDocs integration for API documentation
 - [x] **Development environment** - Complete workspace setup with proper tooling
@@ -53,9 +53,9 @@ Last updated: 2025-11-13
 - [x] **Schema validation** - JSON Schema validation with corrected $schema/$id fields and required id/description
 - [x] **Error handling** - Comprehensive validation and parsing error management
 
-### 🔄 Workflow Executor Implementation [IN PROGRESS - Next 4 Commits to Working Pipeline]
+### 🔄 Research Reproducibility Platform [SIMPLIFIED ARCHITECTURE - 5 Commits to Working Workflow]
 
-**Path to Functional Pipeline**: 4 focused commits to transition from framework to working research tool
+**Architectural Focus**: Start with simple sequential step execution and matrix expansion. Add complexity only when proven necessary.
 
 **Commit 1: Template Variable Validation** ✅ **COMPLETED**
 - [x] **Template extraction** - Parse `{{variable}}` patterns from action parameters
@@ -63,44 +63,82 @@ Last updated: 2025-11-13
 - [x] **Error reporting** - Clear errors for unknown/malformed template variables
 - [x] **Comprehensive tests** - Cover valid, invalid, and malformed template scenarios
 
-**Commit 2: Enhanced Action Interface with Matrix Context**
-- [ ] **Matrix context passing** - Actions receive complete matrix definition automatically
-- [ ] **Simplified workflows** - Remove need to specify matrix variables in `with:` clauses  
-- [ ] **Smart action capabilities** - Actions can optimize based on full matrix context (e.g., max sample size)
-- [ ] **Updated Action base class** - New signature `run(inputs, matrix_job)` with context
+**Commit 2: Intelligent Action Framework & Conservative Execution**
+- [ ] **Package-level actions** - Actions like `causaliq-discovery` with algorithm parameters (no required versioning)
+- [ ] **Conservative execution** - Actions skip work if outputs exist, enabling safe workflow restarts
+- [ ] **Mode-based operation** - `--mode=dry-run|run|compare` for validation, execution, and functional testing
+- [ ] **Smart action capabilities** - Actions optimize internally (dataset loading, caching) transparently to users
+- [ ] **Action-level validation** - Actions validate their own inputs (integrated with dry-run mode)
+- [ ] **Standardized output format** - Fixed filenames by type (graph.xml, metadata.json, trace.csv)
 
-**Commit 3: Action Registry & Discovery**
-- [ ] **ActionRegistry class** - Centralized registry for action discovery and instantiation
-- [ ] **Action registration** - Mechanism to register and lookup available actions
-- [ ] **Parameter mapping** - Map workflow `with:` blocks to action inputs
-- [ ] **Integration point** - Bridge between workflow steps and action classes
+**Commit 3: CLI & Workflow Composition**
+- [ ] **CLI implementation** - `cwork` command with parameter injection: `cwork workflow.yml --network=asia`
+- [ ] **Workflow calling capability** - `cwork` commands in workflow steps for composition
+- [ ] **Template parameter flow** - CLI and caller parameters available as `{{parameter}}` in workflows
+- [ ] **Flexible parameter model** - No rigid workflow input schemas, actions decide what they need
 
-**Commit 4: Step Execution Engine**  
+**Commit 4: Action Registry & Step Execution Engine**
+- [ ] **ActionRegistry class** - Centralized registry for action discovery and instantiation  
 - [ ] **Step executor** - Execute `uses:` action steps via ActionRegistry
-- [ ] **Shell command support** - Handle `run:` command execution
-- [ ] **Sequential execution** - Run workflow steps in order with context passing
-- [ ] **Error propagation** - Comprehensive error handling across workflow execution
+- [ ] **Shell command support** - Handle `run:` command execution and `cwork` workflow calling
+- [ ] **Parameter mapping** - Map workflow `with:` blocks to action inputs with CLI parameter injection
 
-**Commit 5: CLI Enhancement**
-- [ ] **Workflow execution command** - `causaliq-pipeline run workflow.yml`
-- [ ] **Command-line interface** - User-friendly workflow execution from CLI
-- [ ] **Progress reporting** - Real-time feedback during workflow execution
-- [ ] **Error reporting** - Clear error messages for workflow failures
+**Commit 5: Production CLI & Real Actions**
+- [ ] **Enhanced CLI** - Full `cwork` implementation with mode support: `cwork workflow.yml --network=asia --mode=run`
+- [ ] **Real algorithm actions** - PC, GES, FCI structure learning implementations via causaliq-discovery
+- [ ] **CausalIQ package integration** - causaliq-discovery, causaliq-analysis, causaliq-knowledge, causaliq-papers
+- [ ] **Hierarchical output organization** - Standardized folder structures for experiment results
 
-**Commit 6: Concrete Action Implementation**
-- [ ] **Real algorithm action** - PC or GES structure learning with actual implementation
-- [ ] **GraphML output** - Generate real causal graphs in GraphML format
+**Milestone Achievement**: After these 5 commits, CausalIQ Workflow will support:
+- ✅ **Sequential step execution** with matrix expansion
+- ✅ **Intelligent action optimization** with dry-run and caching
+- ✅ **Workflow composition** via CLI parameter passing and shell commands
+- ✅ **Research reproducibility platform** foundation for causaliq-papers integration
+
+### 🔮 Future Enhancements [When Proven Necessary]
+
+**Parallel Jobs Support**: Add `jobs:` syntax and parallel execution when performance demands require it
+**DASK Integration**: Step-level parallelization for computationally intensive actions  
+**Formal Parameter Schemas**: Optional workflow input definitions for enhanced validation when workflows become complex
+- ✅ **DASK-powered task parallelization** within steps
+- ✅ **Workflow composition** via calling with parameters
+- ✅ **Intelligent action optimization** with dry-run and caching
+- ✅ **Research reproducibility platform** foundation for causaliq-papers integration
 - [ ] **Data file handling** - Read actual CSV datasets and produce results
 - [ ] **Algorithm parameters** - Support real algorithm configuration options
 
-**Milestone Achievement**: After these 4 commits, the pipeline will be capable of:
-- ✅ Parse GitHub Actions-style YAML workflows (completed)
-- ✅ Execute real structure learning algorithms  
-- ✅ Handle matrix expansion for parameter sweeps
-- ✅ Organize outputs by experiment parameters
-- ✅ Run complete experiments from command line
+**Milestone Achievement**: After these 8 commits, CausalIQ Workflow will support:
+- ✅ **Parallel job execution** with dependency management
+- ✅ **DASK-powered task parallelization** within steps
+- ✅ **Workflow composition** via calling with parameters
+- ✅ **Intelligent action optimization** with dry-run and caching
+- ✅ **Research reproducibility platform** foundation for causaliq-papers integration
 
-### ⏸️ Algorithm Integration [FUTURE - After Working Pipeline]
+### 🔮 Research Reproducibility Ecosystem [FUTURE - Integration with causaliq-papers]
+
+**Vision**: CausalIQ Workflow serves as the execution engine for a comprehensive research reproducibility platform.
+
+**causaliq-papers Integration Architecture**:
+```bash
+# High-level research reproducibility workflow
+causaliq-papers replicate peters2023causal --target=figure3
+
+# causaliq-papers processes paper dependencies and generates:
+├── workflow-dependencies.yml    # Analyzes what's needed for figure3
+├── optimized-reproduction.yml   # Generates minimal workflow-of-workflows
+└── execution-plan.json         # Dependency graph for execution
+
+# Then calls causaliq-workflow to execute:
+causaliq-workflow run optimized-reproduction.yml --target=figure3
+```
+
+**Workflow-of-Workflows Pattern**:
+- **Paper reproduction** = Top-level workflow calling component workflows
+- **Dependency resolution** = causaliq-papers analyzes workflow graph to minimize execution
+- **Asset targeting** = Generate only requested paper assets (tables, figures, results)
+- **Intelligence integration** = Actions optimize across the entire workflow graph
+
+### ⏸️ Algorithm Integration [FUTURE - After Working Workflow]
 - [ ] **Advanced algorithms** - Additional causal discovery algorithms beyond PC/GES
 - [ ] **Package plugins** - bnlearn (R), Tetrad (Java), causal-learn (Python) integration
 - [ ] **Cross-language bridges** - rpy2, py4j integration for R/Java algorithm access
@@ -117,9 +155,9 @@ Last updated: 2025-11-13
 - ✅ **Schema Validation**: Corrected JSON Schema with proper $id field and field requirements
 - ✅ **Test Coverage**: 100% coverage maintained across 65 comprehensive tests
 
-## Next Milestone: Functional Causal Discovery Pipeline
+## Next Milestone: Functional Causal Discovery Workflow
 
-**Target**: Complete working pipeline capable of executing real causal discovery experiments
+**Target**: Complete working workflow capable of executing real causal discovery experiments
 **Success Criteria**: 
 - Execute complete workflows from command line
 - Support real structure learning algorithms (PC, GES)
@@ -135,7 +173,7 @@ Last updated: 2025-11-13
   - ✅ Series pattern for comparative research (algorithm comparison across datasets/parameters)
   - ✅ Task pattern for sequential operations (preprocessing → algorithm → analysis)  
   - ✅ Mixed pattern combining multiple approaches
-  - ✅ Pipeline pattern for DAG-based workflows with dependencies
+  - ✅ Workflow pattern for DAG-based workflows with dependencies
   - ✅ Longitudinal_research pattern for temporal causal discovery studies
 - [ ] **Configuration inheritance** - Create workflows based on templates with overrides
 ### ✅ CI-Style Workflow Engine [COMPLETED]
@@ -260,7 +298,7 @@ Last updated: 2025-11-13
 - **Web interface** - Browser-based workflow designer and monitor
 
 ### Beyond 2026: Advanced Capabilities
-- **Workflow orchestration** - Complex multi-stage research pipelines
+- **Workflow orchestration** - Complex multi-stage research workflows
 - **Real-time collaboration** - Multiple researchers on shared workflows
 - **AI-assisted optimization** - Automated hyperparameter and workflow tuning
 - **Integration ecosystem** - Plugins for major research tools and platforms

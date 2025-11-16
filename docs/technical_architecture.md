@@ -1,44 +1,137 @@
-# CausalIQ Pipeline - Technical Architecture
+# CausalIQ Workflow - Technical Architecture
+
+## Architectural Vision: Scalable Research Reproducibility Platform
+
+### Core Architecture Principles
+
+CausalIQ Workflow is designed as a **workflow orchestration engine** that enables reproducible causal discovery research through:
+
+1. **Sequential Steps with Matrix Expansion**: Simple, predictable workflow execution with powerful parameterization
+2. **Conservative Execution**: Actions skip work if outputs already exist, enabling safe workflow restart and efficient re-runs
+3. **Mode-Based Operation**: `--mode=dry-run|run|compare` provides validation, execution, and functional testing capabilities
+4. **Intelligent Actions**: Actions optimize internally (e.g., loading datasets once at maximum sample size) while hiding complexity from users  
+5. **Implicit Parameter Passing**: CLI parameters flow through workflows without formal definitions
+6. **Action-Level Validation**: Each action validates its own inputs (integrated with dry-run capability)
+7. **Workflow Composition**: Workflows can call other workflows via `cwork` commands, enabling complex research workflows
+8. **Standardized Output**: Fixed filenames by type (`graph.xml`, `metadata.json`, `trace.csv`) with hierarchical organization
+
+### Research Reproducibility Pattern
+
+**Paper Reproduction** = Workflow-of-Workflows where:
+- **Top-level workflow** defines paper reproduction strategy
+- **Component workflows** handle specific analyses (structure learning, visualization, etc.)
+- **causaliq-papers** processes workflow dependencies to generate targeted execution plans
+- **causaliq-workflow** executes the optimized workflow graph
+
+### Example: Simplified Workflow Architecture
+
+```yaml
+# paper-reproduction.yml (top-level workflow)
+id: "peters2023causal-reproduction"
+matrix:
+  network: ["asia", "cancer"]
+  algorithm: ["pc", "ges", "fci"]
+
+steps:
+  - name: "Structure Learning"
+    uses: "causaliq-discovery"
+    with:
+      algorithm: "{{algorithm}}"
+      dataset: "/data/{{network}}"
+      output: "/results/{{id}}/{{algorithm}}/{{network}}"
+      
+  - name: "Analysis"
+    uses: "causaliq-analysis"
+    with:
+      operation: "evaluate-graph"
+      graph: "/results/{{id}}/{{algorithm}}/{{network}}"
+      
+  - name: "Generate Figures"
+    uses: "causaliq-visualization"
+    with:
+      input: "/results/{{id}}/{{algorithm}}/{{network}}"
+      output: "/results/{{id}}/figures"
+
+# Workflow composition via CLI calls
+steps:
+  - name: "Run Structure Learning"
+    run: |
+      cwork structure-learning.yml \
+        --network="{{network}}" --algorithm="{{algorithm}}"
+```
+
+### Conservative Execution & Mode Control
+
+```yaml
+# CLI execution modes
+cwork workflow.yml --mode=dry-run    # Default: validate and preview (no execution)
+cwork workflow.yml --mode=run        # Execute workflow (skip if outputs exist)
+cwork workflow.yml --mode=compare    # Re-execute and compare with existing outputs
+```
+
+### Action Intelligence & Efficiency
+
+```python
+# Actions support robust execution patterns with validation
+action.run(inputs, dry_run=True)    # (a) Validate and preview execution
+action.run(inputs, force=False)     # (b) Skip if output file already exists (conservative)
+action.compare(inputs)              # (c) Regenerate and compare with filesystem
+
+# Implicit parameter passing - no formal definitions needed
+class StructureLearnerAction(Action):
+    def run(self, inputs, matrix_job, dry_run=False):
+        # Action handles its own validation
+        self.validate_inputs(inputs)
+        
+        # Conservative execution: skip if outputs exist
+        if not inputs.force and self.outputs_exist(inputs):
+            return self.load_existing_outputs(inputs)
+            
+        if dry_run:
+            return self.simulate_execution(inputs)
+        return self.learn_structure(inputs)
+```
 
 ## System Overview
 
-The causaliq-pipeline serves as the orchestration layer within the [CausalIQ ecosystem](https://github.com/causaliq/causaliq), coordinating causal discovery experiments through **GitHub Actions-inspired YAML workflows**. This architecture models causal discovery experiments as familiar CI/CD workflows, providing unprecedented flexibility while leveraging proven workflow patterns.
+The causaliq-workflow serves as the orchestration layer within the [CausalIQ ecosystem](https://github.com/causaliq/causaliq), coordinating causal discovery experiments through **GitHub Actions-inspired YAML workflows**. This architecture models causal discovery experiments as familiar CI/CD workflows, providing unprecedented flexibility while leveraging proven workflow patterns.
 
 ## Current Implementation Status
 
 ### ✅ Implemented Components (v0.1.0)
 
-1. **Action Framework** (`causaliq_pipeline.action`)
+1. **Action Framework** (`causaliq_workflow.action`)
    - Abstract base class for workflow actions
    - Type-safe input/output specifications
    - Comprehensive error handling with `ActionExecutionError` and `ActionValidationError`
    - 100% test coverage with unit and functional tests
 
-2. **Schema Validation** (`causaliq_pipeline.schema`)
+2. **Schema Validation** (`causaliq_workflow.schema`)
    - JSON Schema-based workflow validation
    - Support for GitHub Actions-style syntax
    - Matrix variables, with parameters, data_root/output_root validation
    - Comprehensive error reporting with schema path context
 
-3. **Workflow Execution Engine** (`causaliq_pipeline.workflow`)
+3. **Workflow Execution Engine** (`causaliq_workflow.workflow`)
    - `WorkflowExecutor` class for parsing YAML workflows
    - Matrix expansion with cartesian product generation
    - Path construction from matrix variables and workflow configuration
    - Integration with existing schema validation
 
-4. **Dummy Structure Learner Action** (`causaliq_pipeline.actions.dummy_structure_learner`)
+4. **Dummy Structure Learner Action** (`causaliq_workflow.actions.dummy_structure_learner`)
    - Reference implementation demonstrating action framework
    - GraphML output format for causal graph representation
    - Matrix variable support (dataset, algorithm parameters)
    - Real filesystem operations with proper path construction
 
-5. **Workflow Schema** (`causaliq_pipeline.schemas.causaliq-workflow.json`)
+5. **Workflow Schema** (`causaliq_workflow.schemas.causaliq-workflow.json`)
    - GitHub Actions-inspired syntax with causal discovery extensions
    - Matrix strategy support for parameterized experiments
    - Path construction with `data_root`, `output_root`, and `id` fields
    - Action parameters via `with` blocks
 
 ## Core Architectural Decisions
+
 
 ### GitHub Actions Foundation
 
@@ -85,7 +178,7 @@ class Action(ABC):
 
 ## Core Architecture Components
 
-### 1. Workflow Execution Engine (`causaliq_pipeline.workflow`)
+### 1. Workflow Execution Engine (`causaliq_workflow.workflow`)
 
 ```python
 class WorkflowExecutor:
@@ -116,7 +209,7 @@ class WorkflowExecutor:
 
 **Next Phase**: Step execution, environment management, conditional execution
 
-### 2. Package-Level Algorithm Registry (`causaliq_pipeline.algorithms`)
+### 2. Package-Level Algorithm Registry (`causaliq_workflow.algorithms`)
 
 ```python
 class AlgorithmRegistry:
@@ -139,7 +232,7 @@ class CausalLearnPackage:
     """Python causal-learn direct integration."""
 ```
 
-### 3. Action-Based Component Library (`causaliq_pipeline.actions`)
+### 3. Action-Based Component Library (`causaliq_workflow.actions`)
 
 ```python
 class ActionRegistry:
@@ -283,7 +376,7 @@ steps:
 
 ### Package Coordination
 - **causaliq-discovery**: Core algorithms integrated as package plugins
-- **causaliq-llm**: LLM integration via action-based architecture
+- **causaliq-knowledge**: Knowledge provision via action-based architecture
 - **causaliq-analysis**: Statistical analysis actions and workflow post-processing
 - **causaliq-experiments**: Configuration and result storage with CI workflow metadata
 
