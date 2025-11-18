@@ -1,3 +1,7 @@
-id: "invalid-test"
-description: "Invalid workflow for testing error handling"
-# Missing required steps field
+id: "invalid-001"
+description: "Invalid workflow"
+matrix:
+  dataset: ["asia"]
+steps:
+  - name: "Invalid Step"
+    uses: "completely-unknown-action"

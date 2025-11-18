@@ -1,19 +1,24 @@
 # CausalIQ Workflow - Technical Architecture
 
-## Architectural Vision: Scalable Research Reproducibility Platform
+## Architectural Vision: Configuration-Free Research Reproducibility Platform
 
 ### Core Architecture Principles
 
-CausalIQ Workflow is designed as a **workflow orchestration engine** that enables reproducible causal discovery research through:
+CausalIQ Workflow is designed as a **zero-configuration workflow orchestration engine** that enables reproducible causal discovery research through:
 
-1. **Sequential Steps with Matrix Expansion**: Simple, predictable workflow execution with powerful parameterization
-2. **Conservative Execution**: Actions skip work if outputs already exist, enabling safe workflow restart and efficient re-runs
-3. **Mode-Based Operation**: `--mode=dry-run|run|compare` provides validation, execution, and functional testing capabilities
-4. **Intelligent Actions**: Actions optimize internally (e.g., loading datasets once at maximum sample size) while hiding complexity from users  
-5. **Implicit Parameter Passing**: CLI parameters flow through workflows without formal definitions
-6. **Action-Level Validation**: Each action validates its own inputs (integrated with dry-run capability)
-7. **Workflow Composition**: Workflows can call other workflows via `cwork` commands, enabling complex research workflows
-8. **Standardized Output**: Fixed filenames by type (`graph.xml`, `metadata.json`, `trace.csv`) with hierarchical organization
+1. **Auto-Discovery Action System**: Actions are automatically discovered from installed Python packages - no configuration files required
+2. **Sequential Steps with Matrix Expansion**: Simple, predictable workflow execution with powerful parameterization
+3. **Conservative Execution**: Actions skip work if outputs already exist, enabling safe workflow restart and efficient re-runs
+4. **Mode-Based Operation**: `--mode=dry-run|run|compare` provides validation, execution, and functional testing capabilities
+5. **Convention-Based Plugin Pattern**: Actions follow simple naming conventions for automatic registration
+6. **Implicit Parameter Passing**: CLI parameters flow through workflows without formal definitions
+7. **Action-Level Validation**: Each action validates its own inputs (integrated with dry-run capability)
+8. **Workflow Composition**: Workflows can call other workflows via `cwork` commands, enabling complex research workflows
+9. **Standardized Output**: Fixed filenames by type (`graph.xml`, `metadata.json`, `trace.csv`) with hierarchical organization
+
+### Zero-Configuration Auto-Discovery
+
+**How Action Discovery Works**: When a workflow runs, the system automatically finds and registers all available actions through Python's module introspection - no registry files, no configuration needed. Simply install a package that exports an `Action` class and it becomes available in workflows.
 
 ### Research Reproducibility Pattern
 
@@ -100,35 +105,112 @@ The causaliq-workflow serves as the orchestration layer within the [CausalIQ eco
 
 ### ✅ Implemented Components (v0.1.0)
 
-1. **Action Framework** (`causaliq_workflow.action`)
+1. **Auto-Discovery Action Registry** (`causaliq_workflow.registry`)
+   - **Zero-configuration action discovery**: Automatically finds all installed action packages
+   - **Convention-based registration**: Packages export 'CausalIQAction' class for automatic registration  
+   - **Python module introspection**: Uses `pkgutil.iter_modules()` for discovery without config files
+   - **Runtime action lookup**: Dynamic resolution of action names to classes during workflow execution
+   - **Namespace isolation**: Each action package maintains its own namespace and dependencies
+
+2. **Action Framework** (`causaliq_workflow.action`)
    - Abstract base class for workflow actions
    - Type-safe input/output specifications
    - Comprehensive error handling with `ActionExecutionError` and `ActionValidationError`
    - 100% test coverage with unit and functional tests
 
-2. **Schema Validation** (`causaliq_workflow.schema`)
+3. **Schema Validation** (`causaliq_workflow.schema`)
    - JSON Schema-based workflow validation
    - Support for GitHub Actions-style syntax
    - Matrix variables, with parameters, data_root/output_root validation
    - Comprehensive error reporting with schema path context
 
-3. **Workflow Execution Engine** (`causaliq_workflow.workflow`)
+4. **Workflow Execution Engine** (`causaliq_workflow.workflow`)
    - `WorkflowExecutor` class for parsing YAML workflows
    - Matrix expansion with cartesian product generation
    - Path construction from matrix variables and workflow configuration
-   - Integration with existing schema validation
+   - Integration with auto-discovery action registry
 
-4. **Dummy Structure Learner Action** (`causaliq_workflow.actions.dummy_structure_learner`)
-   - Reference implementation demonstrating action framework
+5. **Example Action Package** (`tests/functional/fixtures/test_action`)
+   - Reference implementation demonstrating auto-discovery pattern
    - GraphML output format for causal graph representation
    - Matrix variable support (dataset, algorithm parameters)
    - Real filesystem operations with proper path construction
 
-5. **Workflow Schema** (`causaliq_workflow.schemas.causaliq-workflow.json`)
+6. **Workflow Schema** (`causaliq_workflow.schemas.causaliq-workflow.json`)
    - GitHub Actions-inspired syntax with causal discovery extensions
    - Matrix strategy support for parameterized experiments
    - Path construction with `data_root`, `output_root`, and `id` fields
    - Action parameters via `with` blocks
+
+## Auto-Discovery Architecture: How It Works
+
+### The Discovery Process: Step-by-Step
+
+#### 1. **Workflow Execution Begins**
+When you run `causaliq-workflow my-experiment.yml`, the system:
+- Creates a new `ActionRegistry` instance
+- Triggers the automatic discovery process
+- Scans all installed Python packages for actions
+
+#### 2. **Package Scanning Phase**
+The registry uses Python's module introspection to:
+- Iterate through all importable modules using `pkgutil.iter_modules()`
+- Attempt to import each module safely (catching import errors)
+- Look for modules that export an 'Action' class
+
+#### 3. **Convention-Based Registration**
+For each discovered module, the system:
+- Checks if the module has a 'CausalIQAction' attribute
+- Verifies that it's a subclass of `causaliq_workflow.action.Action`
+- Registers the action using the module name as the action identifier
+- Builds a runtime lookup table: `{action_name: CausalIQAction_class}`
+
+#### 4. **Workflow Resolution**
+When a workflow step specifies `uses: "my-custom-action"`:
+- The registry looks up "my-custom-action" in the registered actions
+- Instantiates the corresponding CausalIQAction class
+- Passes workflow parameters to the action's `run()` method
+
+### Zero-Configuration Plugin Pattern
+
+#### Creating a New Action Package
+Developers create action packages by following a simple convention:
+
+**Step 1: Package Structure**
+```
+my-custom-action/
+├── pyproject.toml           # Standard Python package config
+├── my_custom_action/        # Package directory  
+│   └── __init__.py         # Must export 'Action' class
+└── README.md
+```
+
+**Step 2: Action Implementation**
+```python
+# my_custom_action/__init__.py
+from causaliq_workflow.action import Action
+
+class CausalIQAction(Action):  # Must be named 'CausalIQAction'
+    name = "my-custom-action"
+    description = "Performs custom analysis"
+    
+    def run(self, inputs):
+        # Action logic here
+        return {"result": "analysis complete"}
+```
+
+**Step 3: Installation & Discovery**
+```bash
+pip install my-custom-action    # Install the package
+causaliq-workflow my-workflow.yml  # Action automatically discovered
+```
+
+#### Why This Works
+- **No configuration files**: No registry.json, no plugin.xml, no setup scripts
+- **Standard Python packaging**: Uses familiar pyproject.toml and pip install
+- **Immediate availability**: Actions become available as soon as the package is installed
+- **Namespace safety**: 'CausalIQAction' avoids conflicts with generic 'Action' classes in other packages
+- **Version management**: Standard semantic versioning through package versions
 
 ## Core Architectural Decisions
 

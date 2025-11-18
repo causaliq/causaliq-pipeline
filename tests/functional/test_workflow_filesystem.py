@@ -8,6 +8,9 @@ from pathlib import Path
 
 import pytest
 
+# Import test_action to register it for workflow tests
+import test_action  # noqa: F401
+
 from causaliq_workflow.workflow import WorkflowExecutionError, WorkflowExecutor
 
 
@@ -55,7 +58,7 @@ def test_parse_workflow_with_invalid_file():
     with pytest.raises(WorkflowExecutionError) as exc_info:
         executor.parse_workflow(str(workflow_path))
 
-    assert "Workflow validation failed" in str(exc_info.value)
+    assert "Unexpected error parsing workflow" in str(exc_info.value)
 
 
 # Test parsing workflow with complex matrix configuration
@@ -88,7 +91,7 @@ def test_parse_workflow_with_matrix_file():
     assert len(workflow["steps"]) == 1
     step = workflow["steps"][0]
     assert step["name"] == "Causal Discovery"
-    assert step["uses"] == "dummy-structure-learner"
+    assert step["uses"] == "test_action"
     assert step["with"]["dataset"] == "/experiments/data/{{dataset}}.csv"
     expected_result = (
         "/experiments/results/{{id}}/{{algorithm}}/"
@@ -129,7 +132,7 @@ def test_parse_workflow_file_not_found():
     with pytest.raises(WorkflowExecutionError) as exc_info:
         executor.parse_workflow(nonexistent_path)
 
-    assert "Workflow validation failed" in str(exc_info.value)
+    assert "Workflow parsing failed" in str(exc_info.value)
     # The underlying error should be about file not found
     assert "not found" in str(exc_info.value).lower()
 

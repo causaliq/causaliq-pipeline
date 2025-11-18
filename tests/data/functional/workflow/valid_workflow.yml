@@ -7,7 +7,7 @@ matrix:
 
 steps:
   - name: "Structure Learning"
-    uses: "dummy-structure-learner"
+    uses: "test_action"
     with:
       dataset: "/experiments/data/{{dataset}}.csv"
       result: "/experiments/results/{{id}}/{{algorithm}}/graph_{{dataset}}.xml"

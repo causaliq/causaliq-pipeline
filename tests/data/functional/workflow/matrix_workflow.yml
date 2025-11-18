@@ -8,7 +8,7 @@ matrix:
 
 steps:
   - name: "Causal Discovery"
-    uses: "dummy-structure-learner"
+    uses: "test_action"
     with:
       dataset: "/experiments/data/{{dataset}}.csv"
       result: "/experiments/results/{{id}}/{{algorithm}}/graph_{{dataset}}_{{alpha}}.xml"

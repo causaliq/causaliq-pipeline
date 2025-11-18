@@ -7,6 +7,8 @@ monkeypatch only works on curent process, so CLI runner must be invoked
 using standalone=False
 """
 
+# Import test_action to register it for CLI tests
+import test_action  # noqa: F401
 from click.testing import CliRunner
 from pytest import fixture
 

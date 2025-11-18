@@ -1,6 +1,6 @@
 """Unit tests for schema validation - no filesystem access."""
 
-from unittest.mock import patch
+import sys
 
 import pytest
 
@@ -122,7 +122,7 @@ def test_valid_workflow_with_matrix():
             "algorithm": ["pc", "ges"],
             "alpha": [0.01, 0.05],
         },
-        "steps": [{"uses": "dummy-structure-learner"}],
+        "steps": [{"uses": "test_action"}],
     }
     result = validate_workflow(valid_workflow)
     assert result is True
@@ -136,7 +136,7 @@ def test_valid_workflow_with_parameters():
         "description": "Workflow with action parameters",
         "steps": [
             {
-                "uses": "dummy-structure-learner",
+                "uses": "test_action",
                 "with": {
                     "dataset": "asia",
                     "algorithm": "pc",
@@ -162,7 +162,7 @@ def test_valid_workflow_with_all_features():
         "steps": [
             {
                 "name": "Structure Learning",
-                "uses": "dummy-structure-learner",
+                "uses": "test_action",
                 "with": {
                     "dataset": "/experiments/data/{{dataset}}.csv",
                     "result": (
@@ -230,9 +230,7 @@ def test_invalid_with_parameter_name():
         validate_workflow(invalid_workflow)
     assert "validation failed" in str(exc_info.value).lower()
 
-
-# Test workflow validation when jsonschema import fails
-def test_missing_jsonschema_import():
+    # Test workflow validation when jsonschema import fails
     """Test validation fails gracefully when jsonschema not available."""
     valid_workflow = {
         "id": "test-workflow",
@@ -240,8 +238,54 @@ def test_missing_jsonschema_import():
         "steps": [{"run": "echo hello"}],
     }
 
-    # Mock import to raise ImportError
-    with patch.dict("sys.modules", {"jsonschema": None}):
+    import builtins
+
+    original_import = builtins.__import__
+
+    def mock_import(name, *args, **kwargs):
+        if name == "jsonschema":
+            raise ImportError("Mock: jsonschema not available")
+        return original_import(name, *args, **kwargs)
+
+    builtins.__import__ = mock_import
+    try:
         with pytest.raises(WorkflowValidationError) as exc_info:
             validate_workflow(valid_workflow)
         assert "jsonschema library required" in str(exc_info.value)
+    finally:
+        builtins.__import__ = original_import
+
+
+# Test jsonschema ImportError handling
+def test_schema_jsonschema_import_error():
+    # Temporarily replace the import to simulate ImportError
+    original_modules = dict(sys.modules)
+
+    try:
+        # Remove jsonschema from modules if present
+        if "jsonschema" in sys.modules:
+            del sys.modules["jsonschema"]
+
+        # Mock __import__ to raise ImportError for jsonschema
+        original_import = __builtins__["__import__"]
+
+        def mock_import(name, *args, **kwargs):
+            if name == "jsonschema":
+                raise ImportError("Mock: jsonschema not available")
+            return original_import(name, *args, **kwargs)
+
+        __builtins__["__import__"] = mock_import
+
+        # This should trigger the ImportError handling at lines 81-82
+        with pytest.raises(
+            WorkflowValidationError, match="jsonschema library required"
+        ):
+            validate_workflow(
+                {"name": "test", "version": "1.0", "actions": []}
+            )
+
+    finally:
+        # Restore original state
+        __builtins__["__import__"] = original_import
+        sys.modules.clear()
+        sys.modules.update(original_modules)

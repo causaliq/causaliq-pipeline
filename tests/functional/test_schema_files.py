@@ -4,6 +4,9 @@ from pathlib import Path
 
 import pytest
 
+# Import test_action to register it for schema tests
+import test_action  # noqa: F401
+
 from causaliq_workflow.schema import (
     WorkflowValidationError,
     load_schema,

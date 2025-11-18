@@ -7,7 +7,10 @@ reusable workflow actions that follow GitHub Actions patterns.
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Any, Dict
+from typing import TYPE_CHECKING, Any, Dict, Optional
+
+if TYPE_CHECKING:
+    from causaliq_workflow.registry import WorkflowContext
 
 
 @dataclass
@@ -44,11 +47,18 @@ class Action(ABC):
     outputs: Dict[str, str] = {}  # name -> description mapping
 
     @abstractmethod
-    def run(self, inputs: Dict[str, Any]) -> Dict[str, Any]:
+    def run(
+        self,
+        inputs: Dict[str, Any],
+        mode: str = "run",
+        context: Optional["WorkflowContext"] = None,
+    ) -> Dict[str, Any]:
         """Execute action with validated inputs, return outputs.
 
         Args:
             inputs: Dictionary of input values keyed by input name
+            mode: Execution mode ('dry-run', 'run', 'compare')
+            context: Workflow context for optimization and intelligence
 
         Returns:
             Dictionary of output values keyed by output name

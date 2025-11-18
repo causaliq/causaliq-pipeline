@@ -1,370 +1,60 @@
 # API Reference
 
-## Core Action Framework
+The CausalIQ Workflow framework provides a comprehensive API for building, validating, and executing data processing workflows. The API is organized into several key modules:
 
-### causaliq_workflow.action
+## Core Components
 
-::: causaliq_workflow.action.Action
-    options:
-      show_root_heading: true
-      show_source: false
-      heading_level: 4
+### [Action Framework](api/actions.md)
+Base classes and interfaces for creating reusable workflow actions that follow GitHub Actions patterns.
 
-::: causaliq_workflow.action.ActionInput
-    options:
-      show_root_heading: true
-      show_source: false
-      heading_level: 4
+- **Action** - Abstract base class for all workflow actions
+- **ActionInput/ActionOutput** - Type-safe input/output specifications  
+- **ActionExecutionError/ActionValidationError** - Exception handling
 
-::: causaliq_workflow.action.ActionOutput
-    options:
-      show_root_heading: true
-      show_source: false
-      heading_level: 4
+### [Action Registry](api/registry.md)
+Centralized discovery and execution system for workflow actions with plugin architecture support.
 
-::: causaliq_workflow.action.ActionExecutionError
-    options:
-      show_root_heading: true
-      show_source: false
-      heading_level: 4
+- **ActionRegistry** - Dynamic action discovery and management
+- **WorkflowContext** - Complete workflow context for actions
+- **ActionRegistryError** - Registry-specific exceptions
 
-::: causaliq_workflow.action.ActionValidationError
-    options:
-      show_root_heading: true
-      show_source: false
-      heading_level: 4
+### [Workflow Engine](api/workflow.md)
+Powerful workflow parsing, validation, and execution engine with matrix expansion and templating.
 
-## Workflow Execution Engine
+- **WorkflowExecutor** - Main workflow processing engine
+- **WorkflowExecutionError** - Workflow execution exceptions
+- **Template system** - Variable substitution and validation
 
-### causaliq_workflow.workflow
+### [Schema Validation](api/schema.md)
+Robust workflow validation against JSON schemas with detailed error reporting.
 
-::: causaliq_workflow.workflow.WorkflowExecutor
-    options:
-      show_root_heading: true
-      show_source: false
-      heading_level: 4
+- **validate_workflow** - Schema-based workflow validation
+- **load_schema/load_workflow_file** - File loading utilities
+- **WorkflowValidationError** - Validation-specific exceptions
 
-::: causaliq_workflow.workflow.WorkflowExecutionError
-    options:
-      show_root_heading: true
-      show_source: false
-      heading_level: 4
+### [CLI Interface](api/cli.md)
+Command-line interface for workflow execution and management.
 
-## Schema Validation
-
-### causaliq_workflow.schema
-
-::: causaliq_workflow.schema.WorkflowValidationError
-    options:
-      show_root_heading: true
-      show_source: false
-      heading_level: 4
-
-::: causaliq_workflow.schema.load_schema
-    options:
-      show_root_heading: true
-      show_source: false
-      heading_level: 4
-
-::: causaliq_workflow.schema.validate_workflow
-    options:
-      show_root_heading: true
-      show_source: false
-      heading_level: 4
-
-::: causaliq_workflow.schema.load_workflow_file
-    options:
-      show_root_heading: true
-      show_source: false
-      heading_level: 4
-
-## Built-in Actions
-
-### causaliq_workflow.actions
-
-::: causaliq_workflow.actions.DummyStructureLearnerAction
-    options:
-      show_root_heading: true
-      show_source: false
-      heading_level: 4
-
-## CLI Interface
-
-### causaliq_workflow.cli
-
-::: causaliq_workflow.cli
-    options:
-      show_root_heading: true
-      show_source: false
-      heading_level: 4
+- **Command-line tools** - Direct workflow execution
+- **Integration support** - CI/CD pipeline integration
 
 ---
 
-## Usage Examples
-
-### Using WorkflowExecutor
-
-```python
-from causaliq_workflow import WorkflowExecutor
-from causaliq_workflow.workflow import WorkflowExecutionError
-
-# Create executor instance
-executor = WorkflowExecutor()
-
-try:
-    # Parse and validate workflow (includes template variable validation)
-    workflow = executor.parse_workflow("experiment.yml")
-    print(f"Workflow ID: {workflow['id']}")
-    print(f"Description: {workflow['description']}")
-    
-    # Expand matrix variables
-    if "matrix" in workflow:
-        jobs = executor.expand_matrix(workflow["matrix"])
-        print(f"Generated {len(jobs)} jobs from matrix")
-        
-        # Each job contains the expanded matrix variables
-        for i, job in enumerate(jobs):
-            print(f"Job {i}: {job}")
-            # Example: {'dataset': 'asia', 'algorithm': 'pc', 'alpha': 0.05}
-
-except WorkflowExecutionError as e:
-    if "Unknown template variables" in str(e):
-        print(f"Template validation failed: {e}")
-        # Example: "Unknown template variables: missing_var. Available context: id, dataset, algorithm"
-    else:
-        print(f"Workflow execution failed: {e}")
-```
-
-### Template Variable Validation
-
-```python
-# The WorkflowExecutor automatically validates template variables during parsing
-# Template variables ({{variable}}) are checked against:
-# - Workflow properties: id, description
-# - Matrix variables: variables defined in the matrix section
-
-# Example: Valid template usage
-valid_workflow = {
-    "id": "test-001",
-    "description": "Template validation example", 
-    "matrix": {"dataset": ["asia"], "algorithm": ["pc"]},
-    "steps": [{
-        "uses": "dummy-structure-learner",
-        "with": {
-            "output": "/results/{{id}}/{{dataset}}_{{algorithm}}.xml",
-            "description": "Processing {{dataset}} with {{algorithm}}"
-        }
-    }]
-}
-
-# Example: Invalid template usage (will raise WorkflowExecutionError)
-invalid_workflow = {
-    "id": "test-001", 
-    "matrix": {"dataset": ["asia"]},
-    "steps": [{
-        "uses": "dummy-structure-learner", 
-        "with": {
-            "output": "/results/{{unknown_var}}/result.xml"  # unknown_var not in context
-        }
-    }]
-}
-```
-
-### Flexible Path Configuration
-
-```python
-# Example workflow YAML showing flexible action parameters
-workflow_yaml = """
-id: "experiment-001"
-description: "Flexible causal discovery experiment"
-matrix:
-  dataset: ["asia", "cancer"]
-  algorithm: ["pc", "ges"]
-  alpha: [0.01, 0.05]
-
-steps:
-  - name: "Structure Learning"
-    uses: "dummy-structure-learner"
-    with:
-      dataset: "/experiments/data/{{dataset}}.csv"
-      result: "/experiments/results/{{id}}/{{algorithm}}/graph_{{dataset}}_{{alpha}}.xml"
-      alpha: "{{alpha}}"
-      max_iter: 1000
-"""
-
-# Parse and expand
-executor = WorkflowExecutor()
-workflow = executor.parse_workflow_from_string(workflow_yaml)
-jobs = executor.expand_matrix(workflow["matrix"])
-# Creates 8 jobs (2×2×2) with customizable file paths
-```
-
-### Matrix Expansion Example
+## Quick Start
 
 ```python
 from causaliq_workflow import WorkflowExecutor
 
+# Create executor and run workflow
 executor = WorkflowExecutor()
-
-# Define matrix
-matrix = {
-    "algorithm": ["pc", "ges", "lingam"],
-    "dataset": ["asia", "cancer"],
-    "alpha": [0.01, 0.05]
-}
-
-# Expand into individual jobs
-jobs = executor.expand_matrix(matrix)
-# Results in 12 jobs (3 × 2 × 2 combinations)
-
-for job in jobs:
-    print(f"Algorithm: {job['algorithm']}, Dataset: {job['dataset']}, Alpha: {job['alpha']}")
+workflow = executor.parse_workflow("my_workflow.yml")
+results = executor.execute_workflow(workflow, mode="run")
 ```
 
-### Creating a Custom Action
+## Next Steps
 
-```python
-from causaliq_workflow.action import Action, ActionInput, ActionExecutionError
-from typing import Any, Dict
+- **[Usage Examples](api/examples.md)** - Comprehensive code examples and patterns
+- **[Action Framework](api/actions.md)** - Learn how to create custom actions
+- **[CLI Interface](api/cli.md)** - Command-line usage and CI/CD integration
 
-class MyStructureLearnerAction(Action):
-    """Custom structure learning action."""
-    
-    name = "my-structure-learner"
-    version = "1.0.0"
-    description = "Custom causal structure learning implementation"
-    author = "Your Name"
-    
-    inputs = {
-        "data_path": ActionInput(
-            name="data_path",
-            description="Path to input CSV dataset",
-            required=True,
-            type_hint="str",
-        ),
-        "output_dir": ActionInput(
-            name="output_dir",
-            description="Directory for output files",
-            required=True,
-            type_hint="str",
-        ),
-        "alpha": ActionInput(
-            name="alpha",
-            description="Significance level for independence tests",
-            required=False,
-            default=0.05,
-            type_hint="float",
-        ),
-    }
-    
-    outputs = {
-        "graph_path": "Path to generated GraphML file",
-        "node_count": "Number of nodes in the learned graph",
-        "edge_count": "Number of edges in the learned graph",
-    }
-    
-    def run(self, inputs: Dict[str, Any]) -> Dict[str, Any]:
-        """Execute the structure learning algorithm."""
-        try:
-            # Your implementation here
-            return {
-                "graph_path": "/path/to/output.graphml",
-                "node_count": 5,
-                "edge_count": 8,
-            }
-        except Exception as e:
-            raise ActionExecutionError(f"Structure learning failed: {e}") from e
-```
-
-### Validating Workflows
-
-```python
-from causaliq_workflow.schema import validate_workflow, WorkflowValidationError
-
-workflow_data = {
-    "name": "My Experiment",
-    "id": "experiment-001",
-    "data_root": "/data",
-    "output_root": "/results",
-    "matrix": {
-        "dataset": ["asia", "cancer"],
-        "algorithm": ["pc", "ges"],
-    },
-    "steps": [
-        {
-            "name": "Structure Learning",
-            "uses": "my-structure-learner",
-            "with": {
-                "alpha": 0.05,
-            },
-        }
-    ],
-}
-
-try:
-    result = validate_workflow(workflow_data)
-    print("Workflow validation passed!")
-except WorkflowValidationError as e:
-    print(f"Validation failed: {e}")
-    print(f"Schema path: {e.schema_path}")
-```
-
-### Loading Custom Schemas
-
-```python
-from causaliq_workflow.schema import load_schema
-from pathlib import Path
-
-# Load custom schema
-schema_path = Path("my-custom-schema.json")
-schema = load_schema(schema_path)
-
-# Use with validation
-validate_workflow(workflow_data, schema)
-```
-
-## Development Guidelines
-
-### Action Implementation Patterns
-
-1. **Inherit from Action base class** - Provides standardized interface
-2. **Define comprehensive inputs** - Use ActionInput for type safety
-3. **Document outputs clearly** - Help users understand action results
-4. **Handle errors gracefully** - Use ActionExecutionError and ActionValidationError
-5. **Follow semantic versioning** - Enable workflow compatibility tracking
-6. **Create GraphML output** - Use standardized format for causal graphs
-
-### Testing Your Actions
-
-```python
-import pytest
-from pathlib import Path
-from causaliq_workflow.action import ActionExecutionError
-
-def test_my_action_success():
-    """Test successful action execution."""
-    action = MyStructureLearnerAction()
-    inputs = {
-        "data_path": "/path/to/test_data.csv",
-        "output_dir": "/path/to/output",
-        "alpha": 0.05,
-    }
-    
-    result = action.run(inputs)
-    
-    assert "graph_path" in result
-    assert "node_count" in result
-    assert "edge_count" in result
-    assert Path(result["graph_path"]).exists()
-
-def test_my_action_missing_file():
-    """Test action fails gracefully with missing input."""
-    action = MyStructureLearnerAction()
-    inputs = {
-        "data_path": "/nonexistent/file.csv",
-        "output_dir": "/path/to/output",
-    }
-    
-    with pytest.raises(ActionExecutionError):
-        action.run(inputs)
-```
+For detailed examples and usage patterns, see the **[Usage Examples](api/examples.md)** page.

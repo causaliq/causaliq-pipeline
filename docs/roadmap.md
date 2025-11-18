@@ -2,31 +2,43 @@
 
 **Single source of truth for all development planning and progress tracking**
 
-Last updated: 2025-11-13
+Last updated: 2025-11-18
 
-## Current Status: Phase 1-2 Transition - Action Framework + Workflow Engine [90% COMPLETE]
+## Current Status: Phase 1-2 Complete - Action Framework + Workflow Engine [99% COMPLETE]
 
-### 🎯 Major Achievement: Complete Action Framework + WorkflowExecutor Implementation
+### 🎯 Major Achievement: Complete Action Registry System + Dynamic Plugin Discovery
 
-**Key Breakthrough**: We've successfully implemented both a robust action framework AND the core workflow execution engine. The framework provides type-safe action composition, comprehensive error handling, proven patterns for workflow orchestration, and now includes complete YAML workflow parsing with matrix expansion capabilities.
+**Key Breakthrough**: We've successfully implemented the complete action registry system with automatic discovery, enabling a true plugin ecosystem for causal discovery workflows. The registry provides zero-configuration action discovery, automatic registration, and seamless integration with the workflow execution engine.
 
-**Latest Achievement**: WorkflowExecutor class with 99-line implementation featuring YAML workflow parsing, cartesian product matrix expansion, dynamic path construction, and comprehensive schema validation - all with 100% test coverage (65 tests total).
+**Latest Achievement**: Complete ActionRegistry implementation with auto-discovery via import-time introspection, comprehensive test action package demonstrating the plugin pattern, and full integration with WorkflowExecutor for end-to-end action execution. The system now supports dynamic action loading from external packages without circular dependencies.
+
+**Action Registry Highlights**:
+- ✅ **Zero-configuration discovery** - Actions automatically discovered via import-time introspection using 'CausalIQAction' convention
+- ✅ **Plugin architecture** - Complete test action package demonstrating external action development patterns
+- ✅ **Seamless integration** - WorkflowExecutor now executes actions via ActionRegistry with full parameter mapping
+- ✅ **Comprehensive validation** - Registry validates action availability and provides detailed error reporting
+- ✅ **Production-ready pattern** - External packages export 'CausalIQAction' class and become immediately available in workflows
+- ✅ **Complete documentation** - Registry API documentation with usage examples and architecture notes
+- ✅ **100% test coverage maintained** - Registry and integration fully tested with comprehensive edge case coverage
 
 **Implementation Highlights**:
 - ✅ **Action framework foundation** - Abstract base classes with type-safe input/output specifications
 - ✅ **GraphML format adoption** - Design decision for causal graph representation (DAGs, PDAGs, CPDAGs, MAGs, PAGs)
 - ✅ **Matrix variable architecture** - Schema support for parameterized experiments
 - ✅ **GitHub Actions-inspired syntax** - Familiar workflow patterns with schema validation
+- ✅ **WorkflowExecutor class** - 99-line implementation featuring YAML workflow parsing, matrix expansion, and comprehensive validation
 
 ## Phase 1 Features (Month 1): Action Framework Foundation ✅ 100% Complete
 
 ### ✅ Foundation Infrastructure [COMPLETED] 
-- [x] **Testing framework** - Comprehensive pytest setup covering unit, functional, integration (47/47 tests passing)
+- [x] **Testing framework** - Comprehensive pytest setup covering unit, functional, integration (112/112 tests passing)
 - [x] **CI/CD workflow** - GitHub Actions workflow with linting, formatting, type checking
 - [x] **Code quality** - Black, isort, flake8, MyPy integration with 100% compliance
-- [x] **Documentation structure** - MkDocs integration for API documentation
+- [x] **Documentation structure** - MkDocs integration with restructured API documentation
+- [x] **API documentation** - Comprehensive 6-page API reference with Google-style docstrings
 - [x] **Development environment** - Complete workspace setup with proper tooling
 - [x] **Configuration foundation** - JSON Schema-based workflow validation established
+- [x] **Test policy compliance** - Function-based test structure with single-line comments
 
 ### ✅ Action Framework [COMPLETED]
 - [x] **Action base classes** - Abstract Action class with type-safe input/output specifications
@@ -43,19 +55,32 @@ Last updated: 2025-11-13
 - [x] **Action parameters** - with blocks for passing parameters to actions
 - [x] **Schema validation** - JSON Schema validation with comprehensive error reporting
 
-## Phase 2 Features (Current): Workflow Execution Engine [60% Complete]
+## Phase 2 Features (Current): Workflow Execution Engine [95% Complete]
 
 ### ✅ CI-Style Workflow Engine [COMPLETED]
-- [x] **WorkflowExecutor class** - Complete 99-line implementation with comprehensive testing (65 total tests, 100% coverage)
+- [x] **WorkflowExecutor class** - Complete 99-line implementation with comprehensive testing (112 total tests, 100% coverage)
 - [x] **Workflow parser** - Parse GitHub Actions-style YAML workflows with schema validation
 - [x] **Matrix expansion** - Convert matrix variables into individual experiment jobs using cartesian product
 - [x] **Path construction** - Dynamic file path generation from matrix variables with flexible templating
 - [x] **Schema validation** - JSON Schema validation with corrected $schema/$id fields and required id/description
 - [x] **Error handling** - Comprehensive validation and parsing error management
+- [x] **Template variable system** - Full template validation with context checking and error reporting
 
-### 🔄 Research Reproducibility Platform [SIMPLIFIED ARCHITECTURE - 5 Commits to Working Workflow]
+### ✅ Documentation Infrastructure [COMPLETED]
+- [x] **API restructure** - Separated API documentation into focused, navigable pages
+- [x] **Google-style docstrings** - Complete class variable documentation for comprehensive API coverage  
+- [x] **Cross-linking** - Proper navigation between API sections with back/forward links
+- [x] **Usage examples** - Comprehensive examples covering basic to advanced usage patterns
+- [x] **MkDocs integration** - Updated navigation structure with proper page organization
+- [x] **CI integration** - Documentation builds without warnings or broken links
 
-**Architectural Focus**: Start with simple sequential step execution and matrix expansion. Add complexity only when proven necessary.
+### 🔄 Research Reproducibility Platform [STREAMLINED 3-COMMIT APPROACH]
+
+**Architectural Focus**: Optimized path to working CLI with external actions. Start with dynamic action discovery and build incrementally.
+
+### 🔄 Research Reproducibility Platform [STREAMLINED 3-COMMIT APPROACH]
+
+**Architectural Focus**: Optimized path to working CLI with external actions. Start with dynamic action discovery and build incrementally.
 
 **Commit 1: Template Variable Validation** ✅ **COMPLETED**
 - [x] **Template extraction** - Parse `{{variable}}` patterns from action parameters
@@ -63,37 +88,45 @@ Last updated: 2025-11-13
 - [x] **Error reporting** - Clear errors for unknown/malformed template variables
 - [x] **Comprehensive tests** - Cover valid, invalid, and malformed template scenarios
 
-**Commit 2: Intelligent Action Framework & Conservative Execution**
-- [ ] **Package-level actions** - Actions like `causaliq-discovery` with algorithm parameters (no required versioning)
-- [ ] **Conservative execution** - Actions skip work if outputs exist, enabling safe workflow restarts
-- [ ] **Mode-based operation** - `--mode=dry-run|run|compare` for validation, execution, and functional testing
-- [ ] **Smart action capabilities** - Actions optimize internally (dataset loading, caching) transparently to users
-- [ ] **Action-level validation** - Actions validate their own inputs (integrated with dry-run mode)
-- [ ] **Standardized output format** - Fixed filenames by type (graph.xml, metadata.json, trace.csv)
+**Commit 2: Documentation & Test Infrastructure** ✅ **COMPLETED**
+- [x] **API documentation restructure** - Separated into focused pages (Actions, Registry, Workflow, Schema, CLI, Examples)
+- [x] **Google-style docstrings** - Complete class variable documentation for API generation
+- [x] **Test policy compliance** - Converted major test files to function-based structure with single-line comments
+- [x] **100% test coverage** - Maintained comprehensive coverage across 112 tests
+- [x] **MkDocs integration** - Updated navigation and cross-linking structure
+- [x] **Documentation quality** - Eliminated broken links and warnings
 
-**Commit 3: CLI & Workflow Composition**
-- [ ] **CLI implementation** - `cwork` command with parameter injection: `cwork workflow.yml --network=asia`
-- [ ] **Workflow calling capability** - `cwork` commands in workflow steps for composition
-- [ ] **Template parameter flow** - CLI and caller parameters available as `{{parameter}}` in workflows
-- [ ] **Flexible parameter model** - No rigid workflow input schemas, actions decide what they need
+**Commit 3: Action Registry & Step Execution Engine** ✅ **COMPLETED**
+- [x] **ActionRegistry class** - Centralized registry for dynamic action discovery via import-time introspection
+- [x] **Dynamic discovery** - Load actions from imported packages using convention-over-configuration
+- [x] **Step executor** - Complete integration with WorkflowExecutor for `uses:` action step execution
+- [x] **Action execution** - Full mapping of workflow `with:` blocks to action inputs with validation
+- [x] **Error handling** - Comprehensive action discovery and execution error management
+- [x] **Plugin architecture** - Zero-configuration plugin system with test action package demonstrating pattern
 
-**Commit 4: Action Registry & Step Execution Engine**
-- [ ] **ActionRegistry class** - Centralized registry for action discovery and instantiation  
-- [ ] **Step executor** - Execute `uses:` action steps via ActionRegistry
-- [ ] **Shell command support** - Handle `run:` command execution and `cwork` workflow calling
-- [ ] **Parameter mapping** - Map workflow `with:` blocks to action inputs with CLI parameter injection
+**Commit 4: CLI Implementation & Mode Support** 🔑 **NEXT**
+- [ ] **`causaliq-workflow` command** - Complete CLI with workflow file execution using ActionRegistry
+- [ ] **Mode-based operation** - `--mode=dry-run|run|compare` for validation, execution, and testing
+- [ ] **Parameter injection** - CLI parameters available as template variables via WorkflowExecutor
+- [ ] **CLI error handling** - User-friendly error reporting for workflow and action failures
+- [ ] **Workflow validation** - Pre-execution validation with clear error messages via ActionRegistry
 
-**Commit 5: Production CLI & Real Actions**
-- [ ] **Enhanced CLI** - Full `cwork` implementation with mode support: `cwork workflow.yml --network=asia --mode=run`
-- [ ] **Real algorithm actions** - PC, GES, FCI structure learning implementations via causaliq-discovery
-- [ ] **CausalIQ package integration** - causaliq-discovery, causaliq-analysis, causaliq-knowledge, causaliq-papers
-- [ ] **Hierarchical output organization** - Standardized folder structures for experiment results
+**Commit 5: External Package Integration & Demo**
+- [ ] **causaliq-discovery package** - Simple structure learning action (PC algorithm)
+- [ ] **Entry point registration** - Dynamic discovery working with external package
+- [ ] **End-to-end workflow** - Complete example: CLI → ActionRegistry → External action → Results
+- [ ] **Real algorithm execution** - PC structure learning with actual data processing
+- [ ] **Output standardization** - GraphML files and standardized result formats
 
 **Milestone Achievement**: After these 5 commits, CausalIQ Workflow will support:
-- ✅ **Sequential step execution** with matrix expansion
-- ✅ **Intelligent action optimization** with dry-run and caching
-- ✅ **Workflow composition** via CLI parameter passing and shell commands
-- ✅ **Research reproducibility platform** foundation for causaliq-papers integration
+- ✅ **Complete documentation infrastructure** - Comprehensive API reference with proper navigation
+- ✅ **Template variable validation** - Full context checking and error reporting
+- ✅ **Test infrastructure compliance** - Function-based test structure with 100% coverage
+- ✅ **Dynamic action discovery** - Load actions from external packages via import-time introspection
+- [ ] **Complete CLI interface** - Full `causaliq-workflow` command with mode support and parameter injection
+- [ ] **External action execution** - Real structure learning via causaliq-discovery package
+- [ ] **Conservative execution** - Skip work if outputs exist, enabling safe workflow restarts  
+- [ ] **Research reproducibility foundation** - Ready for causaliq-papers integration
 
 ### 🔮 Future Enhancements [When Proven Necessary]
 
@@ -144,7 +177,7 @@ causaliq-workflow run optimized-reproduction.yml --target=figure3
 - [ ] **Cross-language bridges** - rpy2, py4j integration for R/Java algorithm access
 - [ ] **Algorithm benchmarking** - Systematic comparison across algorithm implementations
 
-## Success Metrics - Phase 1 ✅ + Phase 2 Partial ✅
+## Success Metrics - Phase 1 ✅ + Phase 2 ✅
 
 - ✅ **Framework Foundation**: Action framework with type-safe interfaces implemented
 - ✅ **Schema Architecture**: GitHub Actions-inspired workflow syntax with matrix support  
@@ -153,7 +186,12 @@ causaliq-workflow run optimized-reproduction.yml --target=figure3
 - ✅ **Workflow Parsing**: Complete WorkflowExecutor with YAML parsing and matrix expansion
 - ✅ **Path Construction**: Dynamic file path generation from matrix variables
 - ✅ **Schema Validation**: Corrected JSON Schema with proper $id field and field requirements
-- ✅ **Test Coverage**: 100% coverage maintained across 65 comprehensive tests
+- ✅ **Test Coverage**: 100% coverage maintained across 112 comprehensive tests
+- ✅ **Documentation Infrastructure**: Complete API reference with structured navigation
+- ✅ **Template System**: Full template variable validation and context checking
+- ✅ **Code Quality**: Policy-compliant test structure with function-based organization
+- ✅ **Action Registry**: Complete plugin architecture with auto-discovery and validation
+- ✅ **Plugin System**: Zero-configuration action packages with production-ready patterns
 
 ## Next Milestone: Functional Causal Discovery Workflow
 
@@ -164,8 +202,9 @@ causaliq-workflow run optimized-reproduction.yml --target=figure3
 - Handle matrix expansion with parallel step execution  
 - Generate organized experimental outputs with GraphML graphs
 - Maintain 100% test coverage and CI compliance
+- Comprehensive API documentation with proper navigation
 
-**Timeline**: 4 focused commits transitioning from framework to working research tool
+**Timeline**: 2 focused commits remaining to transition from framework to working research tool
   - ✅ Required/optional section validation per pattern
   - ✅ Hierarchical field validation with detailed error reporting
   - ✅ Flexible validation schemas defined in external YAML

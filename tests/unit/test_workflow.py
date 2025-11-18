@@ -1,7 +1,5 @@
 """Unit tests for WorkflowExecutor - no filesystem access."""
 
-from unittest.mock import patch
-
 import pytest
 
 from causaliq_workflow.schema import WorkflowValidationError
@@ -15,42 +13,55 @@ def test_workflow_execution_error():
     assert str(error) == "Test error"
 
 
-# Test successful workflow parsing with mocked dependencies
-@patch("causaliq_workflow.workflow.validate_workflow")
-@patch("causaliq_workflow.workflow.load_workflow_file")
-def test_parse_workflow_success(mock_load, mock_validate):
+def test_parse_workflow_success(monkeypatch):
     """Test successful workflow parsing with valid YAML."""
     # Setup mocks
     workflow_data = {"name": "Test", "steps": [{"run": "echo hello"}]}
-    mock_load.return_value = workflow_data
-    mock_validate.return_value = True
 
-    # Execute
+    def fake_load_workflow_file(path):
+        assert path == "/path/to/workflow.yml"
+        return workflow_data
+
+    def fake_validate_workflow(data):
+        assert data == workflow_data
+        return True
+
+    monkeypatch.setattr(
+        "causaliq_workflow.workflow.load_workflow_file",
+        fake_load_workflow_file,
+    )
+    monkeypatch.setattr(
+        "causaliq_workflow.workflow.validate_workflow", fake_validate_workflow
+    )
     executor = WorkflowExecutor()
     result = executor.parse_workflow("/path/to/workflow.yml")
-
-    # Verify
     assert result == workflow_data
-    mock_load.assert_called_once_with("/path/to/workflow.yml")
-    mock_validate.assert_called_once_with(workflow_data)
 
 
-# Test workflow parsing failure with validation error
-@patch("causaliq_workflow.workflow.validate_workflow")
-@patch("causaliq_workflow.workflow.load_workflow_file")
-def test_parse_workflow_validation_error(mock_load, mock_validate):
+def test_parse_workflow_validation_error(monkeypatch):
     """Test workflow parsing fails with validation error."""
     # Setup mocks
     workflow_data = {"name": "Test"}  # Missing steps
-    mock_load.return_value = workflow_data
-    mock_validate.side_effect = WorkflowValidationError("Missing steps field")
 
-    # Execute and verify exception
+    def fake_load_workflow_file(path):
+        assert path == "/path/to/workflow.yml"
+        return workflow_data
+
+    def fake_validate_workflow(data):
+        assert data == workflow_data
+        raise WorkflowValidationError("Missing steps field")
+
+    monkeypatch.setattr(
+        "causaliq_workflow.workflow.load_workflow_file",
+        fake_load_workflow_file,
+    )
+    monkeypatch.setattr(
+        "causaliq_workflow.workflow.validate_workflow", fake_validate_workflow
+    )
     executor = WorkflowExecutor()
     with pytest.raises(WorkflowExecutionError) as exc_info:
         executor.parse_workflow("/path/to/workflow.yml")
-
-    assert "Workflow validation failed" in str(exc_info.value)
+    assert "Workflow parsing failed" in str(exc_info.value)
 
 
 # Test matrix expansion with simple variables
@@ -103,19 +114,18 @@ def test_expand_matrix_single_variable():
     assert jobs == expected_jobs
 
 
-# Test matrix expansion exception handling
-@patch("causaliq_workflow.workflow.itertools.product")
-def test_expand_matrix_exception_handling(mock_product):
+def test_expand_matrix_exception_handling(monkeypatch):
     """Test matrix expansion fails gracefully with unexpected errors."""
+
     # Setup mock to raise exception
-    mock_product.side_effect = RuntimeError("Unexpected error in itertools")
+    def fake_product(*args, **kwargs):
+        raise RuntimeError("Unexpected error in itertools")
 
+    monkeypatch.setattr("itertools.product", fake_product)
     matrix = {"algorithm": ["pc", "ges"]}
-
     executor = WorkflowExecutor()
     with pytest.raises(WorkflowExecutionError) as exc_info:
         executor.expand_matrix(matrix)
-
     assert "Matrix expansion failed" in str(exc_info.value)
     assert "Unexpected error in itertools" in str(exc_info.value)
 
@@ -194,10 +204,7 @@ def test_extract_template_variables():
     assert variables4 == set()
 
 
-# Test template variable validation with valid workflow
-@patch("causaliq_workflow.workflow.validate_workflow")
-@patch("causaliq_workflow.workflow.load_workflow_file")
-def test_parse_workflow_valid_templates(mock_load, mock_validate):
+def test_parse_workflow_valid_templates(monkeypatch):
     """Test workflow parsing with valid template variables."""
     workflow_data = {
         "id": "test-workflow",
@@ -205,26 +212,36 @@ def test_parse_workflow_valid_templates(mock_load, mock_validate):
         "matrix": {"dataset": ["asia"], "algorithm": ["pc"]},
         "steps": [
             {
-                "uses": "action",
+                "uses": "test_action",
                 "with": {
                     "result": "/results/{{id}}/{{dataset}}_{{algorithm}}.xml"
                 },
             }
         ],
     }
-    mock_load.return_value = workflow_data
-    mock_validate.return_value = True
 
+    def fake_load_workflow_file(path):
+        assert path == "test.yml"
+        return workflow_data
+
+    def fake_validate_workflow(data):
+        assert data == workflow_data
+        return True
+
+    monkeypatch.setattr(
+        "causaliq_workflow.workflow.load_workflow_file",
+        fake_load_workflow_file,
+    )
+    monkeypatch.setattr(
+        "causaliq_workflow.workflow.validate_workflow", fake_validate_workflow
+    )
     executor = WorkflowExecutor()
+    executor.action_registry.validate_workflow_actions = lambda workflow: []
     result = executor.parse_workflow("test.yml")
-
     assert result == workflow_data
 
 
-# Test template variable validation with invalid variables
-@patch("causaliq_workflow.workflow.validate_workflow")
-@patch("causaliq_workflow.workflow.load_workflow_file")
-def test_parse_workflow_invalid_templates(mock_load, mock_validate):
+def test_parse_workflow_invalid_templates(monkeypatch):
     """Test workflow parsing fails with invalid template variables."""
     workflow_data = {
         "id": "test-workflow",
@@ -237,39 +254,61 @@ def test_parse_workflow_invalid_templates(mock_load, mock_validate):
             }
         ],
     }
-    mock_load.return_value = workflow_data
-    mock_validate.return_value = True
 
+    def fake_load_workflow_file(path):
+        assert path == "test.yml"
+        return workflow_data
+
+    def fake_validate_workflow(data):
+        assert data == workflow_data
+        return True
+
+    monkeypatch.setattr(
+        "causaliq_workflow.workflow.load_workflow_file",
+        fake_load_workflow_file,
+    )
+    monkeypatch.setattr(
+        "causaliq_workflow.workflow.validate_workflow", fake_validate_workflow
+    )
     executor = WorkflowExecutor()
     with pytest.raises(WorkflowExecutionError) as exc_info:
         executor.parse_workflow("test.yml")
-
     error_msg = str(exc_info.value)
     assert "Unknown template variables: ['unknown_var']" in error_msg
     assert "Available variables: ['dataset', 'description', 'id']" in error_msg
 
 
-# Test template variable validation without matrix
-@patch("causaliq_workflow.workflow.validate_workflow")
-@patch("causaliq_workflow.workflow.load_workflow_file")
-def test_parse_workflow_no_matrix_valid_templates(mock_load, mock_validate):
+def test_parse_workflow_no_matrix_valid_templates(monkeypatch):
     """Test workflow parsing with only workflow-level variables."""
     workflow_data = {
         "id": "simple-workflow",
         "description": "Simple test",
         "steps": [
             {
-                "uses": "action",
+                "uses": "test_action",
                 "with": {"output": "/results/{{id}}_{{description}}.txt"},
             }
         ],
     }
-    mock_load.return_value = workflow_data
-    mock_validate.return_value = True
 
+    def fake_load_workflow_file(path):
+        assert path == "test.yml"
+        return workflow_data
+
+    def fake_validate_workflow(data):
+        assert data == workflow_data
+        return True
+
+    monkeypatch.setattr(
+        "causaliq_workflow.workflow.load_workflow_file",
+        fake_load_workflow_file,
+    )
+    monkeypatch.setattr(
+        "causaliq_workflow.workflow.validate_workflow", fake_validate_workflow
+    )
     executor = WorkflowExecutor()
+    executor.action_registry.validate_workflow_actions = lambda workflow: []
     result = executor.parse_workflow("test.yml")
-
     assert result == workflow_data
 
 

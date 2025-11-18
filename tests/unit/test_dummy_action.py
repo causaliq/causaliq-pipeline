@@ -1,28 +1,54 @@
 """
-Unit tests for dummy structure learning action.
+Unit tests for test action.
 
 Tests the action logic without filesystem operations.
 All external dependencies are mocked.
 """
 
-from unittest.mock import Mock, patch
-
 import pytest
+from test_action import CausalIQAction as TestAction
 
 from causaliq_workflow.action import ActionExecutionError
-from causaliq_workflow.actions import DummyStructureLearnerAction
+
+
+class MockPath:
+    """Mock Path class for testing."""
+
+    def __init__(self, path_str):
+        self.path_str = path_str
+        self._exists = True
+        self._mkdir_should_fail = False
+        self._write_text_should_fail = False
+
+    def exists(self):
+        return self._exists
+
+    def mkdir(self, parents=True, exist_ok=True):
+        if self._mkdir_should_fail:
+            raise OSError("Permission denied")
+
+    def write_text(self, content, encoding=None):
+        if self._write_text_should_fail:
+            raise OSError("Write failed")
+
+    def __str__(self):
+        return self.path_str
+
+    def __truediv__(self, other):
+        result = MockPath(f"{self.path_str}/{other}")
+        result._exists = False  # Default for new files
+        return result
 
 
 # Test action metadata attributes are correctly defined
 def test_action_metadata():
     """Test action metadata attributes are correctly defined."""
-    action = DummyStructureLearnerAction()
+    action = TestAction()
 
-    assert action.name == "dummy-structure-learner"
+    assert action.name == "test-action"
     assert action.version == "1.0.0"
     assert (
-        action.description
-        == "Dummy action that creates an empty graph file for testing"
+        action.description == "Test action that creates a simple output file"
     )
     assert action.author == "CausalIQ"
 
@@ -30,76 +56,93 @@ def test_action_metadata():
 # Test action input specifications are correctly defined
 def test_input_specifications():
     """Test action input specifications are correctly defined."""
-    action = DummyStructureLearnerAction()
+    action = TestAction()
 
-    required_inputs = {"data_path", "output_dir", "dataset", "algorithm"}
+    required_inputs = {"data_path", "output_dir", "message"}
     assert set(action.inputs.keys()) == required_inputs
 
     # Check required inputs
     assert action.inputs["data_path"].required is True
     assert action.inputs["output_dir"].required is True
-    assert action.inputs["dataset"].required is True
-    assert action.inputs["algorithm"].required is True
+    assert action.inputs["message"].required is False
 
 
 # Test action output specifications are correctly defined
 def test_output_specifications():
     """Test action output specifications are correctly defined."""
-    action = DummyStructureLearnerAction()
+    action = TestAction()
 
-    expected_outputs = {"graph_path", "node_count", "edge_count"}
+    expected_outputs = {"output_file", "message_count", "status"}
     assert set(action.outputs.keys()) == expected_outputs
 
 
 # Test successful action execution with valid inputs
-@patch("causaliq_workflow.actions.dummy_structure_learner.Path")
-def test_run_with_valid_inputs(mock_path):
+def test_run_with_valid_inputs(monkeypatch):
     """Test successful action execution with valid inputs."""
-    # Setup mocks
-    mock_data_path = Mock()
-    mock_data_path.exists.return_value = True
+    # Setup mock Path instances
+    mock_data_path = MockPath("/data/test.csv")
+    mock_data_path._exists = True
 
-    mock_output_dir = Mock()
-    mock_graph_path = Mock()
-    mock_output_dir.__truediv__ = Mock(return_value=mock_graph_path)
+    mock_output_dir = MockPath("/output/test")
+    mock_graph_path = MockPath("/output/test/graph.xml")
+    mock_graph_path._exists = False  # File doesn't exist, so write
 
-    mock_path.side_effect = [mock_data_path, mock_output_dir]
+    # Track Path creation calls
+    path_calls = []
+
+    def mock_path_constructor(path_str):
+        path_calls.append(path_str)
+        if path_str == "/data/test.csv":
+            return mock_data_path
+        elif path_str == "/output/test":
+            return mock_output_dir
+        else:
+            return MockPath(path_str)
+
+    # Monkeypatch the Path constructor
+    import test_action
+
+    monkeypatch.setattr(test_action, "Path", mock_path_constructor)
 
     # Execute action
-    action = DummyStructureLearnerAction()
+    action = TestAction()
     inputs = {
         "data_path": "/data/test.csv",
         "output_dir": "/output/test",
-        "dataset": "asia",
-        "algorithm": "pc",
+        "message": "Test message",
     }
 
-    result = action.run(inputs)
+    result = action.run(inputs, mode="run")
 
-    # Verify filesystem operations
-    mock_data_path.exists.assert_called_once()
-    mock_output_dir.mkdir.assert_called_once_with(parents=True, exist_ok=True)
-    mock_graph_path.write_text.assert_called_once()
+    # Verify Path calls
+    assert "/data/test.csv" in path_calls
+    assert "/output/test" in path_calls
 
     # Verify outputs
-    assert result["node_count"] == 0
-    assert result["edge_count"] == 0
-    assert "graph_path" in result
+    assert result["message_count"] == 12  # "Test message" has 12 characters
+    assert result["status"] == "success"
+    assert "output_file" in result
 
 
 # Test action execution fails with missing data file
-@patch("causaliq_workflow.actions.dummy_structure_learner.Path")
-def test_run_with_missing_data_file(mock_path):
+def test_run_with_missing_data_file(monkeypatch):
     """Test action execution fails with missing data file."""
-    # Setup mocks
-    mock_data_path = Mock()
-    mock_data_path.exists.return_value = False
-    mock_data_path.__str__ = Mock(return_value="/missing/data.csv")
+    # Setup mock Path that doesn't exist
+    mock_data_path = MockPath("/missing/data.csv")
+    mock_data_path._exists = False
 
-    mock_path.return_value = mock_data_path
+    def mock_path_constructor(path_str):
+        if path_str == "/missing/data.csv":
+            return mock_data_path
+        return MockPath(path_str)
+
+    # Monkeypatch the Path constructor
+    import test_action
+
+    monkeypatch.setattr(test_action, "Path", mock_path_constructor)
 
     # Execute action
-    action = DummyStructureLearnerAction()
+    action = TestAction()
     inputs = {
         "data_path": "/missing/data.csv",
         "output_dir": "/output/test",
@@ -110,24 +153,33 @@ def test_run_with_missing_data_file(mock_path):
     with pytest.raises(
         ActionExecutionError, match="Input data file not found"
     ):
-        action.run(inputs)
+        action.run(inputs, mode="run")
 
 
 # Test action execution handles filesystem errors gracefully
-@patch("causaliq_workflow.actions.dummy_structure_learner.Path")
-def test_run_with_filesystem_error(mock_path):
+def test_run_with_filesystem_error(monkeypatch):
     """Test action execution handles filesystem errors gracefully."""
     # Setup mocks
-    mock_data_path = Mock()
-    mock_data_path.exists.return_value = True
+    mock_data_path = MockPath("/data/test.csv")
+    mock_data_path._exists = True
 
-    mock_output_dir = Mock()
-    mock_output_dir.mkdir.side_effect = OSError("Permission denied")
+    mock_output_dir = MockPath("/readonly/output")
+    mock_output_dir._mkdir_should_fail = True  # Simulate permission denied
 
-    mock_path.side_effect = [mock_data_path, mock_output_dir]
+    def mock_path_constructor(path_str):
+        if path_str == "/data/test.csv":
+            return mock_data_path
+        elif path_str == "/readonly/output":
+            return mock_output_dir
+        return MockPath(path_str)
+
+    # Monkeypatch the Path constructor
+    import test_action
+
+    monkeypatch.setattr(test_action, "Path", mock_path_constructor)
 
     # Execute action
-    action = DummyStructureLearnerAction()
+    action = TestAction()
     inputs = {
         "data_path": "/data/test.csv",
         "output_dir": "/readonly/output",
@@ -136,15 +188,15 @@ def test_run_with_filesystem_error(mock_path):
     }
 
     with pytest.raises(
-        ActionExecutionError, match="Dummy structure learning failed"
+        ActionExecutionError, match="Test action execution failed"
     ):
-        action.run(inputs)
+        action.run(inputs, mode="run")
 
 
 # Test default validate_inputs method returns True
 def test_validate_inputs_default_implementation():
     """Test default validate_inputs method returns True."""
-    action = DummyStructureLearnerAction()
+    action = TestAction()
     inputs = {
         "data_path": "/test/path.csv",
         "output_dir": "/test/output",

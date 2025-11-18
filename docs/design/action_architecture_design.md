@@ -1,10 +1,37 @@
-# Action-Based Component Architecture
+# Action Auto-Discovery Architecture
 
 ## Overview
 
-The action-based architecture provides reusable, version-controlled workflow components following GitHub Actions patterns. Actions encapsulate common causal discovery operations with standardised inputs, outputs, and error handling.
+The action architecture provides reusable, automatically-discoverable workflow components following GitHub Actions patterns. Actions are **zero-configuration plugins** that become available immediately upon installation, with no registry files or manual setup required.
 
-## Core Action Framework
+## Auto-Discovery Action Framework
+
+### How Actions Are Found and Used
+
+#### The Discovery Lifecycle
+
+1. **Installation Phase**: Developer installs action package (`pip install my-action`)
+2. **Discovery Phase**: Framework scans Python environment for action packages  
+3. **Registration Phase**: Actions are automatically registered by module name
+4. **Execution Phase**: Workflows reference actions by name (`uses: "my-action"`)
+
+#### Convention-Based Action Definition
+
+Actions follow a simple naming convention for automatic discovery:
+
+```python
+# my_action/__init__.py - Must export class named 'CausalIQAction'
+from causaliq_workflow.action import Action
+
+class CausalIQAction(Action):  # Must be named 'CausalIQAction'
+    name = "my-action"
+    version = "1.0.0"
+    description = "Performs custom analysis"
+    
+    def run(self, inputs):
+        # Implementation here
+        return {"status": "complete"}
+```
 
 ### Base Action Interface
 
@@ -76,243 +103,237 @@ class Action(ABC):
         return formatted
 ```
 
-### Action Registry and Versioning
+### Auto-Discovery Action Registry
+
+The registry automatically discovers and manages actions without configuration:
 
 ```python
+import pkgutil
 import importlib
-import pkg_resources
-from typing import Dict, List, Optional
+from typing import Dict, Type, Any
 
 class ActionRegistry:
-    """Manage registration and execution of workflow actions."""
+    """Automatically discover and manage workflow actions."""
     
     def __init__(self):
-        self._actions: Dict[str, Dict[str, Action]] = {}  # name -> version -> action
-        self._load_builtin_actions()
-        self._discover_plugin_actions()
+        self._actions: Dict[str, Type[Action]] = {}
+        self._discover_actions()  # Automatic discovery on initialization
     
-    def register_action(self, action: Action) -> None:
-        """Register action with version management."""
-        name = action.name
-        version = action.version
+    def _discover_actions(self):
+        """Scan Python environment for action packages."""
         
-        if name not in self._actions:
-            self._actions[name] = {}
-        
-        self._actions[name][version] = action
-        
-        # Validate semantic versioning
-        try:
-            semantic_version.Version(version)
-        except ValueError as e:
-            raise ValueError(f"Invalid semantic version '{version}' for action '{name}': {e}")
+        # Iterate through all importable modules
+        for finder, module_name, ispkg in pkgutil.iter_modules():
+            try:
+                # Attempt to import the module
+                module = importlib.import_module(module_name)
+                
+                # Check if module exports an 'Action' class
+                if hasattr(module, 'Action'):
+                    action_class = getattr(module, 'Action')
+                    
+                    # Verify it's a proper Action subclass
+                    if (isinstance(action_class, type) and 
+                        issubclass(action_class, Action) and 
+                        action_class != Action):
+                        
+                        # Register using module name as action identifier
+                        self._actions[module_name] = action_class
+                        
+            except ImportError:
+                # Skip modules that can't be imported
+                continue
     
-    def get_action(self, action_ref: str) -> Action:
-        """
-        Get action by reference: 'action-name@v1.2.3' or 'action-name@latest'
-        
-        Examples:
-        - load-network@v1.0.0
-        - load-network@latest  
-        - causal-discovery@v2.1.0
-        """
-        if "@" in action_ref:
-            name, version_spec = action_ref.split("@", 1)
-        else:
-            name, version_spec = action_ref, "latest"
-        
-        if name not in self._actions:
-            raise ValueError(f"Unknown action: {name}")
-        
-        available_versions = self._actions[name]
-        
-        if version_spec == "latest":
-            # Get highest semantic version
-            versions = [semantic_version.Version(v) for v in available_versions.keys()]
-            latest_version = str(max(versions))
-            return available_versions[latest_version]
-        
-        if version_spec in available_versions:
-            return available_versions[version_spec]
-        
-        # Try semantic version matching (e.g., ^1.0.0 matches 1.x.x)
-        spec = semantic_version.Spec(version_spec)
-        compatible_versions = []
-        
-        for version_str in available_versions.keys():
-            version = semantic_version.Version(version_str)
-            if spec.match(version):
-                compatible_versions.append((version, version_str))
-        
-        if compatible_versions:
-            # Get highest compatible version
-            latest_compatible = max(compatible_versions)[1]
-            return available_versions[latest_compatible]
-        
-        raise ValueError(f"No compatible version found for {action_ref}")
+    def get_available_actions(self) -> Dict[str, Type[Action]]:
+        """Return copy of available actions."""
+        return self._actions.copy()
     
-    def execute_action(self, action_ref: str, inputs: Dict[str, Any]) -> Dict[str, ActionOutput]:
-        """Execute action with input validation and output formatting."""
-        action = self.get_action(action_ref)
-        
-        # Validate inputs
-        validated_inputs = action.validate_inputs(inputs)
-        
-        try:
-            # Execute action
-            raw_outputs = action.run(validated_inputs)
-            
-            # Format outputs
-            return action.format_outputs(raw_outputs)
-            
-        except Exception as e:
-            raise RuntimeError(f"Action {action_ref} failed: {str(e)}") from e
+    def get_action_class(self, action_name: str) -> Type[Action]:
+        """Get action class by name."""
+        if action_name not in self._actions:
+            raise ActionRegistryError(f"Action '{action_name}' not found. Available actions: {list(self._actions.keys())}")
+        return self._actions[action_name]
 ```
 
-## Core Causal Discovery Actions
+#### How Discovery Works Step-by-Step
 
-### Data Loading Actions
+1. **Registry Initialization**: When `ActionRegistry()` is created, discovery starts automatically
+2. **Module Scanning**: Uses `pkgutil.iter_modules()` to iterate through all Python modules
+3. **Safe Import**: Attempts to import each module, skipping those that fail
+4. **Convention Check**: Looks for a class named 'Action' in each module
+5. **Validation**: Ensures the Action class inherits from the base Action class
+6. **Registration**: Maps module name to Action class for workflow lookup
+
+#### Action Package Development Workflow
+
+**Step 1: Create Standard Python Package**
+```bash
+mkdir my_custom_action
+cd my_custom_action
+```
+
+**Step 2: Define Package Structure**
+```
+my_custom_action/
+├── pyproject.toml
+├── my_custom_action/
+│   └── __init__.py  # Must export 'Action' class
+└── README.md
+```
+
+**Step 3: Implement Action Convention**
+```python
+# my_custom_action/__init__.py
+from causaliq_workflow.action import Action
+
+class CausalIQAction(Action):  # Must be named 'CausalIQAction'
+    name = "my-custom-action"
+    version = "1.0.0" 
+    description = "Custom analysis action"
+    
+    def run(self, inputs):
+        # Action implementation
+        result = self.perform_analysis(inputs['data'])
+        return {"analysis_result": result}
+```
+
+**Step 4: Install and Use Immediately**
+```bash
+pip install my_custom_action
+causaliq-workflow my-experiment.yml  # Action automatically available
+```
+```
+
+## Auto-Discovery Action Examples
+
+### Example 1: Simple Analysis Action
+
+**Package: causaliq_analysis**
 
 ```python
+# causaliq_analysis/__init__.py
+from causaliq_workflow.action import Action
 import pandas as pd
-import numpy as np
+import networkx as nx
+
+class CausalIQAction(Action):  # Auto-discovered by this name
+    name = "causaliq-analysis"
+    version = "1.0.0"
+    description = "Basic causal graph analysis"
+    
+    def run(self, inputs):
+        """Analyze causal graph structure."""
+        graph_path = inputs['graph_path']
+        graph = nx.read_graphml(graph_path)
+        
+        analysis = {
+            "nodes": len(graph.nodes),
+            "edges": len(graph.edges), 
+            "density": nx.density(graph),
+            "is_dag": nx.is_directed_acyclic_graph(graph)
+        }
+        
+        return {"analysis": analysis}
+```
+
+**Usage in Workflow:**
+```yaml
+steps:
+  - name: "Analyze Graph"
+    uses: "causaliq_analysis"  # Automatically discovered
+    with:
+      graph_path: "/results/learned_graph.xml"
+```
+
+### Example 2: Data Loading Action
+
+**Package: causaliq_data**
+
+```python
+# causaliq_data/__init__.py  
+from causaliq_workflow.action import Action
+import pandas as pd
 from pathlib import Path
 
-class LoadNetworkAction(Action):
-    """Load causal network dataset from various sources."""
+class CausalIQAction(Action):
+    name = "causaliq-data"
+    version = "2.1.0"
+    description = "Load and preprocess causal datasets"
     
-    name = "load-network"
-    version = "1.0.0"
-    description = "Load causal network dataset with optional transformations"
-    
-    inputs = {
-        "network_name": ActionInput("network_name", "Name of the network to load", required=True),
-        "source": ActionInput("source", "Data source", default="zenodo"),
-        "sample_size": ActionInput("sample_size", "Number of samples to generate", type_hint="int"),
-        "random_seed": ActionInput("random_seed", "Random seed for reproducibility", default=42),
-        "add_noise": ActionInput("add_noise", "Add Gaussian noise to continuous variables", default=False),
-        "noise_level": ActionInput("noise_level", "Standard deviation of noise", default=0.1)
-    }
-    
-    outputs = {
-        "dataset": "Pandas DataFrame with network data",
-        "true_graph": "NetworkX DiGraph representing true causal structure",
-        "metadata": "Dataset metadata including source, transformations applied"
-    }
-    
-    def run(self, inputs: Dict[str, Any]) -> Dict[str, Any]:
-        """Load network data with optional transformations."""
-        network_name = inputs["network_name"]
-        source = inputs["source"]
-        sample_size = inputs.get("sample_size")
-        random_seed = inputs["random_seed"]
+    def run(self, inputs):
+        """Load dataset with optional preprocessing."""
+        dataset_name = inputs['dataset']
+        sample_size = inputs.get('sample_size')
         
-        # Set random seed for reproducibility
-        np.random.seed(random_seed)
-        
-        # Load network from source
-        if source == "zenodo":
-            dataset, true_graph = self._load_from_zenodo(network_name)
-        elif source == "bnlearn":
-            dataset, true_graph = self._load_from_bnlearn(network_name)
-        elif source == "local":
-            dataset, true_graph = self._load_from_local(network_name)
+        # Load from standard datasets
+        if dataset_name == "asia":
+            data = self._load_asia_network()
+        elif dataset_name == "cancer":
+            data = self._load_cancer_network()
         else:
-            raise ValueError(f"Unsupported data source: {source}")
+            # Load from file path
+            data = pd.read_csv(dataset_name)
         
-        # Apply transformations
-        if sample_size and sample_size != len(dataset):
-            dataset = self._resample_dataset(dataset, sample_size)
+        # Apply sampling if requested
+        if sample_size and sample_size < len(data):
+            data = data.sample(n=sample_size, random_state=42)
         
-        if inputs.get("add_noise", False):
-            dataset = self._add_noise(dataset, inputs["noise_level"])
-        
-        metadata = {
-            "network_name": network_name,
-            "source": source,
-            "original_size": len(dataset),
-            "sample_size": sample_size or len(dataset),
-            "noise_added": inputs.get("add_noise", False),
-            "random_seed": random_seed
-        }
+        output_path = inputs['output_path']
+        data.to_csv(f"{output_path}/data.csv", index=False)
         
         return {
-            "dataset": dataset,
-            "true_graph": true_graph,
-            "metadata": metadata
+            "data_path": f"{output_path}/data.csv",
+            "rows": len(data),
+            "columns": len(data.columns)
         }
-    
-    def _load_from_zenodo(self, network_name: str) -> tuple:
-        """Load network from Zenodo repository."""
-        # Implementation would use zenodo API or cached files
-        # For now, placeholder that loads from local cache
-        return self._load_from_local(network_name)
-    
-    def _load_from_bnlearn(self, network_name: str) -> tuple:
-        """Load network using R bnlearn package."""
-        try:
-            import rpy2.robjects as ro
-            from rpy2.robjects import pandas2ri
-            pandas2ri.activate()
-            
-            # Load bnlearn
-            ro.r('library(bnlearn)')
-            
-            # Load network structure and data
-            ro.r(f'data({network_name})')
-            data_r = ro.r(network_name)
-            dataset = pandas2ri.rpy2py(data_r)
-            
-            # Load true graph if available
-            try:
-                ro.r(f'net <- {network_name}.net')
-                # Convert bnlearn network to NetworkX
-                true_graph = self._convert_bnlearn_to_networkx(ro.r('net'))
-            except:
-                true_graph = None
-            
-            return dataset, true_graph
-            
-        except ImportError:
-            raise RuntimeError("rpy2 not available - cannot load from bnlearn")
-    
-    def _load_from_local(self, network_name: str) -> tuple:
-        """Load network from local files."""
-        # Implementation would load from data directory
-        # Placeholder for now
-        raise NotImplementedError(f"Local loading for {network_name} not implemented")
+```
 
-class RandomiseDataAction(Action):
-    """Apply randomisation strategies to dataset."""
+### Example 3: Algorithm Bridge Action
+
+**Package: causaliq_pc_algorithm**
+
+```python
+# causaliq_pc_algorithm/__init__.py
+from causaliq_workflow.action import Action
+import pandas as pd
+import networkx as nx
+
+class CausalIQAction(Action):
+    name = "causaliq-pc-algorithm" 
+    version = "1.5.2"
+    description = "PC algorithm for causal structure learning"
     
-    name = "randomise-data"
-    version = "1.0.0"
-    description = "Apply various randomisation strategies to causal data"
-    
-    inputs = {
-        "dataset": ActionInput("dataset", "Input dataset", required=True),
-        "strategy": ActionInput("strategy", "Randomisation strategy", required=True),
-        "random_seed": ActionInput("random_seed", "Random seed", default=42)
-    }
-    
-    outputs = {
-        "randomised_dataset": "Dataset with randomisation applied",
-        "transformation_log": "Log of transformations applied"
-    }
-    
-    def run(self, inputs: Dict[str, Any]) -> Dict[str, Any]:
-        """Apply randomisation strategy."""
-        dataset = inputs["dataset"]
-        strategy = inputs["strategy"]
-        np.random.seed(inputs["random_seed"])
+    def run(self, inputs):
+        """Execute PC algorithm."""
+        data_path = inputs['data_path']
+        alpha = inputs.get('alpha', 0.05)
+        output_path = inputs['output_path']
         
-        transformation_log = []
+        # Load data
+        data = pd.read_csv(data_path)
         
-        if strategy == "row_shuffle":
-            randomised = dataset.sample(frac=1.0).reset_index(drop=True)
-            transformation_log.append("Shuffled row order")
-            
-        elif strategy == "column_shuffle":
+        # Run PC algorithm (implementation details omitted)
+        graph = self._execute_pc_algorithm(data, alpha)
+        
+        # Save results
+        nx.write_graphml(graph, f"{output_path}/graph.xml")
+        
+        # Generate metadata
+        metadata = {
+            "algorithm": "pc",
+            "alpha": alpha,
+            "nodes": len(graph.nodes),
+            "edges": len(graph.edges)
+        }
+        
+        with open(f"{output_path}/metadata.json", 'w') as f:
+            json.dump(metadata, f, indent=2)
+        
+        return {
+            "graph_path": f"{output_path}/graph.xml",
+            "metadata_path": f"{output_path}/metadata.json",
+            "edge_count": len(graph.edges)
+        }
             columns = dataset.columns.tolist()
             np.random.shuffle(columns)
             randomised = dataset[columns]
@@ -426,90 +447,98 @@ class CausalDiscoveryAction(Action):
         try:
             import rpy2.robjects as ro
             from rpy2.robjects import pandas2ri
-            pandas2ri.activate()
-            
-            # Transfer data to R
-            ro.r('library(bnlearn)')
-            ro.globalenv['data'] = data
-            
-            # Build parameter string
-            param_str = self._build_bnlearn_params(parameters)
-            
-            # Execute algorithm
-            cmd = f"learned_net <- {algorithm}(data{param_str})"
-            ro.r(cmd)
-            
-            # Convert result to NetworkX
-            learned_graph = self._convert_bnlearn_to_networkx(ro.r('learned_net'))
-            
-            algo_info = {
-                "package": "bnlearn",
-                "algorithm": algorithm,
-                "parameters": parameters,
-                "command": cmd
-            }
-            
-            return learned_graph, algo_info
-            
-        except Exception as e:
-            raise RuntimeError(f"bnlearn execution failed: {str(e)}") from e
-```
-
-### Evaluation and Comparison Actions
-
-```python
-class EvaluateGraphAction(Action):
-    """Evaluate learned graph against true graph."""
-    
-    name = "evaluate-graph"
-    version = "1.0.0"
-    description = "Compute accuracy metrics for learned causal graph"
-    
-    inputs = {
-        "learned_graph": ActionInput("learned_graph", "Learned causal graph", required=True),
-        "true_graph": ActionInput("true_graph", "True causal graph", required=True),
-        "metrics": ActionInput("metrics", "Metrics to compute", default=["shd", "precision", "recall", "f1"])
-    }
-    
-    outputs = {
-        "metrics": "Dictionary of computed metrics",
-        "confusion_matrix": "Edge-level confusion matrix",
-        "edge_analysis": "Detailed edge-by-edge comparison"
-    }
-    
-    def run(self, inputs: Dict[str, Any]) -> Dict[str, Any]:
-        """Compute evaluation metrics."""
-        learned = inputs["learned_graph"]
-        true = inputs["true_graph"]
-        metric_names = inputs["metrics"]
-        
-        # Compute confusion matrix at edge level
-        confusion = self._compute_edge_confusion_matrix(learned, true)
-        
-        # Compute requested metrics
-        metrics = {}
-        
-        if "shd" in metric_names:
-            metrics["shd"] = self._compute_shd(learned, true)
-        
-        if "precision" in metric_names:
-            metrics["precision"] = confusion["tp"] / (confusion["tp"] + confusion["fp"]) if confusion["tp"] + confusion["fp"] > 0 else 0.0
-        
-        if "recall" in metric_names:
-            metrics["recall"] = confusion["tp"] / (confusion["tp"] + confusion["fn"]) if confusion["tp"] + confusion["fn"] > 0 else 0.0
-        
-        if "f1" in metric_names:
-            p, r = metrics.get("precision", 0), metrics.get("recall", 0)
-            metrics["f1"] = 2 * p * r / (p + r) if p + r > 0 else 0.0
-        
-        # Detailed edge analysis
-        edge_analysis = self._analyse_edge_differences(learned, true)
-        
-        return {
-            "metrics": metrics,
-            "confusion_matrix": confusion,
-            "edge_analysis": edge_analysis
         }
 ```
 
-This action-based architecture provides a flexible, version-controlled foundation for building complex causal discovery workflows with reusable components and standardised interfaces.
+## Benefits of Auto-Discovery Architecture
+
+### For Action Developers
+
+#### Zero Configuration Setup
+- **No registry management**: No need to maintain configuration files or plugin registries
+- **Standard Python patterns**: Use familiar `pyproject.toml`, `pip install`, and package structure
+- **Immediate availability**: Actions become available as soon as the package is installed
+- **Simple convention**: Just export a class named 'Action' from the package
+
+#### Development Workflow  
+1. **Create package**: Standard Python package with `pyproject.toml`
+2. **Implement action**: Export 'Action' class following the interface
+3. **Test locally**: `pip install -e .` for development testing
+4. **Publish**: Standard PyPI publishing or GitHub releases
+5. **Use immediately**: Actions available in all workflows without restart
+
+### For Workflow Authors
+
+#### Seamless Integration
+- **Familiar syntax**: Uses standard GitHub Actions-style `uses: "action-name"`
+- **No configuration**: No need to declare or configure actions before use
+- **Version management**: Standard semantic versioning through package versions
+- **Dependency handling**: Python's pip handles all dependencies automatically
+
+#### Ecosystem Growth
+- **Organic discovery**: New actions become available automatically
+- **Community contributions**: Easy for community to create and share actions
+- **Quality assurance**: Actions are regular Python packages with standard testing
+- **Documentation**: Standard Python documentation tools apply
+
+### For the Framework
+
+#### Architectural Benefits
+- **Reduced complexity**: No registry files, configuration, or plugin management code
+- **Robustness**: Discovery failures don't break the system (graceful degradation)  
+- **Performance**: Lazy loading and one-time discovery minimize overhead
+- **Maintainability**: Less framework code means easier maintenance
+
+#### Ecosystem Integration
+- **Standard distribution**: Uses PyPI and standard Python packaging
+- **Cross-platform**: Works wherever Python works
+- **Version compatibility**: Standard semantic versioning for compatibility management
+- **Testing integration**: Actions can be tested with standard Python testing tools
+
+## Auto-Discovery Implementation Patterns
+
+### Cross-Language Bridges
+Actions can bridge to R, Java, and other languages:
+
+```python
+# causaliq_bnlearn/__init__.py
+from causaliq_workflow.action import Action
+import rpy2.robjects as ro
+
+class CausalIQAction(Action):
+    name = "causaliq-bnlearn"
+    
+    def __init__(self):
+        # Initialize R environment once
+        ro.r('library(bnlearn)')
+        
+    def run(self, inputs):
+        # Bridge to R bnlearn package
+        algorithm = inputs['algorithm']  # 'pc', 'gs', 'iamb', etc.
+        ro.globalenv['data'] = inputs['data']
+        ro.r(f'result <- {algorithm}(data)')
+        return {"graph": self._convert_to_networkx(ro.r('result'))}
+```
+
+### Algorithm Collections
+Single packages can provide multiple related algorithms:
+
+```python  
+# causaliq_constraint_based/__init__.py
+class CausalIQAction(Action):
+    name = "causaliq-constraint-based"
+    
+    def run(self, inputs):
+        algorithm = inputs['algorithm']
+        
+        if algorithm == 'pc':
+            return self._run_pc(inputs)
+        elif algorithm == 'fci':
+            return self._run_fci(inputs)
+        elif algorithm == 'cfci':
+            return self._run_cfci(inputs)
+        else:
+            raise ValueError(f"Unknown algorithm: {algorithm}")
+```
+
+This auto-discovery architecture creates a vibrant, extensible ecosystem where actions can be developed, shared, and used with minimal friction while maintaining the robustness and reliability needed for scientific workflows.

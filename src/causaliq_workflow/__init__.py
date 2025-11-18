@@ -3,6 +3,8 @@ causaliq-workflow: Template package for CausalIQ repos
 """
 
 # Import core functionality
+from .action import Action, ActionExecutionError, ActionValidationError
+from .registry import ActionRegistry, ActionRegistryError, WorkflowContext
 from .workflow import WorkflowExecutionError, WorkflowExecutor
 
 __version__ = "0.1.0"
@@ -24,6 +26,12 @@ __all__ = [
     "__author__",
     "__email__",
     "VERSION",
+    "Action",
+    "ActionExecutionError",
+    "ActionValidationError",
+    "ActionRegistry",
+    "ActionRegistryError",
+    "WorkflowContext",
     "WorkflowExecutor",
     "WorkflowExecutionError",
 ]

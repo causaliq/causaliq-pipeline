@@ -8,8 +8,9 @@ matrix strategy support for causal discovery experiments.
 import itertools
 import re
 from pathlib import Path
-from typing import Any, Dict, List, Set, Union
+from typing import Any, Dict, List, Optional, Set, Union
 
+from causaliq_workflow.registry import ActionRegistry, WorkflowContext
 from causaliq_workflow.schema import (
     WorkflowValidationError,
     load_workflow_file,
@@ -32,13 +33,18 @@ class WorkflowExecutor:
     parameterised experiments using flexible action parameter templating.
     """
 
+    def __init__(self) -> None:
+        """Initialize workflow executor with action registry."""
+        self.action_registry = ActionRegistry()
+
     def parse_workflow(
-        self, workflow_path: Union[str, Path]
+        self, workflow_path: Union[str, Path], mode: str = "dry-run"
     ) -> Dict[str, Any]:
         """Parse workflow YAML file with validation.
 
         Args:
             workflow_path: Path to workflow YAML file
+            mode: Execution mode for action validation
 
         Returns:
             Parsed and validated workflow dictionary
@@ -50,10 +56,17 @@ class WorkflowExecutor:
             workflow = load_workflow_file(workflow_path)
             validate_workflow(workflow)
             self._validate_template_variables(workflow)
+
+            # Validate all actions exist and can run
+            self._validate_workflow_actions(workflow, mode)
+
             return workflow
-        except WorkflowValidationError as e:
+
+        except (WorkflowValidationError, FileNotFoundError) as e:
+            raise WorkflowExecutionError(f"Workflow parsing failed: {e}")
+        except Exception as e:
             raise WorkflowExecutionError(
-                f"Workflow validation failed: {e}"
+                f"Unexpected error parsing workflow: {e}"
             ) from e
 
     def expand_matrix(
@@ -163,3 +176,190 @@ class WorkflowExecutor:
                 self._collect_template_variables(item, used_variables)
         elif isinstance(obj, str):
             used_variables.update(self._extract_template_variables(obj))
+
+    def _resolve_template_variables(
+        self, obj: Any, variables: Dict[str, Any]
+    ) -> Any:
+        """Recursively resolve template variables in workflow object.
+
+        Args:
+            obj: Workflow object (dict, list, or string) to resolve
+            variables: Variable values to substitute
+
+        Returns:
+            Resolved object with template variables substituted
+        """
+        if isinstance(obj, dict):
+            return {
+                key: self._resolve_template_variables(value, variables)
+                for key, value in obj.items()
+            }
+        elif isinstance(obj, list):
+            return [
+                self._resolve_template_variables(item, variables)
+                for item in obj
+            ]
+        elif isinstance(obj, str):
+            result = obj
+            for var in self._extract_template_variables(obj):
+                if var in variables:
+                    result = result.replace(
+                        f"{{{{{var}}}}}", str(variables[var])
+                    )
+            return result
+        else:
+            return obj
+
+    def _validate_workflow_actions(
+        self, workflow: Dict[str, Any], mode: str
+    ) -> None:
+        """Validate all actions in workflow by running in dry-run mode.
+
+        Args:
+            workflow: Parsed workflow dictionary
+            mode: Base execution mode for validation
+
+        Raises:
+            WorkflowExecutionError: If action validation fails
+        """
+        # Get action validation errors
+        action_errors = self.action_registry.validate_workflow_actions(
+            workflow
+        )
+        if action_errors:
+            raise WorkflowExecutionError(
+                f"Action validation failed: {'; '.join(action_errors)}"
+            )
+
+        # Run full workflow validation in dry-run mode if requested
+        if mode != "dry-run":
+            try:
+                self.execute_workflow(workflow, mode="dry-run")
+            except Exception as e:
+                raise WorkflowExecutionError(
+                    f"Workflow dry-run validation failed: {e}"
+                ) from e
+
+    def execute_workflow(
+        self,
+        workflow: Dict[str, Any],
+        mode: str = "dry-run",
+        cli_params: Optional[Dict[str, Any]] = None,
+    ) -> List[Dict[str, Any]]:
+        """Execute complete workflow with matrix expansion.
+
+        Args:
+            workflow: Parsed workflow dictionary
+            mode: Execution mode ('dry-run', 'run', 'compare')
+            cli_params: Additional parameters from CLI
+
+        Returns:
+            List of job results from matrix expansion
+
+        Raises:
+            WorkflowExecutionError: If workflow execution fails
+        """
+        if cli_params is None:
+            cli_params = {}
+
+        try:
+            # Expand matrix into individual jobs
+            matrix = workflow.get("matrix", {})
+            jobs = self.expand_matrix(matrix)
+
+            results = []
+            for job_index, job in enumerate(jobs):
+                # Create workflow context
+                context = WorkflowContext(
+                    workflow_id=workflow.get("id", f"workflow-{job_index}"),
+                    matrix=matrix,
+                    current_job=job,
+                    data_root=workflow.get("data_root", ""),
+                    output_root=workflow.get("output_root", ""),
+                    mode=mode,
+                    all_jobs=jobs,
+                )
+
+                # Execute job steps
+                job_result = self._execute_job(
+                    workflow, job, context, cli_params
+                )
+                results.append(job_result)
+
+            return results
+
+        except Exception as e:
+            raise WorkflowExecutionError(
+                f"Workflow execution failed: {e}"
+            ) from e
+
+    def _execute_job(
+        self,
+        workflow: Dict[str, Any],
+        job: Dict[str, Any],
+        context: WorkflowContext,
+        cli_params: Dict[str, Any],
+    ) -> Dict[str, Any]:
+        """Execute single job with resolved matrix variables.
+
+        Args:
+            workflow: Base workflow configuration
+            job: Job with resolved matrix variables
+            context: Workflow context
+            cli_params: CLI parameters
+
+        Returns:
+            Job execution results
+
+        """
+        # Combine all variable sources for template resolution
+        variables = {
+            **workflow,  # Workflow-level properties
+            **job,  # Matrix variables
+            **cli_params,  # CLI parameters
+        }
+
+        step_results: Dict[str, Any] = {}
+
+        for step in workflow.get("steps", []):
+            step_name = step.get("name", f"step-{len(step_results)}")
+
+            if "uses" in step:
+                # Execute action step
+                action_name = step["uses"]
+                action_inputs = step.get("with", {})
+
+                # Resolve template variables in inputs
+                resolved_inputs = self._resolve_template_variables(
+                    action_inputs, variables
+                )
+
+                # Execute action
+                step_result = self.action_registry.execute_action(
+                    action_name, resolved_inputs, context
+                )
+
+                step_results[step_name] = step_result
+
+                # Add step outputs to variables for subsequent steps
+                if "outputs" in step_result:
+                    variables[f"steps.{step_name}.outputs"] = step_result[
+                        "outputs"
+                    ]
+
+            elif "run" in step:
+                # TODO: Shell command execution
+                raise WorkflowExecutionError(
+                    f"Shell command execution not yet implemented: "
+                    f"{step['run']}"
+                )
+            else:
+                raise WorkflowExecutionError(
+                    f"Step '{step_name}' must have 'uses' or 'run'"
+                )
+
+        return {
+            "job": job,
+            "steps": step_results,
+            "context": context,
+        }
