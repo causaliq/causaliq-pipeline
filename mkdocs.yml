@@ -56,6 +56,8 @@ nav:
     - Action Registry: api/registry.md
     - Workflow Engine: api/workflow.md
     - Schema Validation: api/schema.md
+    - Status System: api/status.md
+    - Logging System: api/logging.md
     - CLI Interface: api/cli.md
     - Usage Examples: api/examples.md
 

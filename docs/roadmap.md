@@ -111,92 +111,112 @@ Last updated: 2025-11-18
 - [x] **Schema enhancement** - JSON schema supports `null` values for mandatory specification
 - [x] **Comprehensive testing** - Full coverage of default values, CLI overrides, and validation
 
-**Commit 5: TaskStatus Enum Foundation** 🔑 **NEXT** - [Design Note: docs/design/logging_architecture_design.md]
-- [ ] **TaskStatus enum** - Define all 10 status types (EXECUTES, WOULD_EXECUTE, SKIPS, etc.)
-- [ ] **Status validation** - Unit tests for enum definitions and completeness
-- [ ] **Foundation only** - Pure enum implementation, no behavior changes
+**Commit 5: TaskStatus Enum Foundation** ✅ **COMPLETED** - [Design Note: docs/design/logging_architecture_design.md]
+- [x] **TaskStatus enum** - Define all 10 status types (EXECUTES, WOULD_EXECUTE, SKIPS, etc.)
+- [x] **Status validation** - Unit tests for enum definitions and completeness
+- [x] **Foundation only** - Pure enum implementation, no behavior changes
 
-**Commit 6: WorkflowLogger Core Structure**
-- [ ] **WorkflowLogger class** - Basic constructor with file/terminal output configuration
-- [ ] **Output destinations** - Support for multiple logging targets (file, terminal, tests)
-- [ ] **Basic methods** - Logger instantiation and configuration, no task-specific logic yet
+**Commit 6: WorkflowLogger Core Structure** ✅ **COMPLETED**
+- [x] **WorkflowLogger class** - Basic constructor with file/terminal output configuration
+- [x] **Output destinations** - Support for multiple logging targets (file, terminal, tests)
+- [x] **Basic methods** - Logger instantiation and configuration, no task-specific logic yet
 
-**Commit 7: Action Interface Extension**
+**Commit 7: Action Interface Extension** 🔑 **NEXT**
 - [ ] **Optional logger parameter** - Add `logger` to `Action.run()` method signature
 - [ ] **Backward compatibility** - All existing actions accept but ignore logger
 - [ ] **Interface validation** - Confirm all actions work unchanged with new signature
 
-**Commit 8: Basic Task Logging**
+**Commit 8: Basic CLI Foundation** 🎯 **REAL-WORLD TESTING READY**
+- [ ] **Minimal CLI command** - `causaliq-workflow run workflow.yml` with basic options
+- [ ] **File path resolution** - Handle workflow file loading and validation  
+- [ ] **Mode selection** - Support --mode=run|dry-run execution
+- [ ] **Basic error handling** - User-friendly error messages for common issues
+- [ ] **Log level control** - --log-level=none|summary|all parameter
+
+**REAL-WORLD TESTING PHASE** 🧪 **START HERE FOR EXTERNAL PACKAGE DEVELOPMENT**
+
+*After Commit 8, create `causaliq-simple-actions` package to test:*
+- *Action development experience with `CausalIQAction` convention*
+- *CLI usability and error messages*  
+- *Package discovery and integration*
+- *Workflow syntax ergonomics*
+
+**Commit 9: Basic Task Logging**
 - [ ] **log_task() method** - Implement formatted message output with status/runtime/files
 - [ ] **Message formatting** - Standardized format: timestamp, action, status, description
 - [ ] **Comprehensive testing** - All status types with various input/output scenarios
 
-**Commit 9: Action Output File Interface**
+**Commit 9: Basic Task Logging**
+- [ ] **log_task() method** - Implement formatted message output with status/runtime/files
+- [ ] **Message formatting** - Standardized format: timestamp, action, status, description
+- [ ] **Comprehensive testing** - All status types with various input/output scenarios
+
+**Commit 10: Action Output File Interface**
 - [ ] **get_output_files() method** - Add to Action base class for file discovery
 - [ ] **Default implementation** - Empty list for actions without specific outputs
 - [ ] **Test integration** - Implement in dummy action for validation
 
-**Commit 10: FileManager for Output Detection**
+**Commit 11: FileManager for Output Detection**
 - [ ] **FileManager class** - File existence and comparison utilities
 - [ ] **Traditional file logic** - Basic exists/missing detection for replace-semantics files
 - [ ] **Isolated testing** - File operations without workflow integration
 
-**Commit 11: Skip Logic Foundation**
+**Commit 12: Skip Logic Foundation**
 - [ ] **should_skip_action() method** - Determine if action can skip based on existing outputs
 - [ ] **Traditional files only** - Skip logic for replace-semantics files (no append-semantics yet)
 - [ ] **Comprehensive scenarios** - Test various file existence and modification patterns
 
-**Commit 12: ActionExecutor Core Structure**
+**Commit 13: ActionExecutor Core Structure**
 - [ ] **ActionExecutor class** - Wrapper for action execution with status determination
 - [ ] **Status logic** - EXECUTES vs SKIPS for traditional files in run mode
 - [ ] **Mock integration** - Test execution wrapper without WorkflowExecutor changes
 
-**Commit 13: WorkflowExecutor Logger Integration**
+**Commit 14: WorkflowExecutor Logger Integration**
 - [ ] **Logger creation** - WorkflowExecutor creates and configures WorkflowLogger
 - [ ] **ActionExecutor usage** - Replace direct action calls with ActionExecutor wrapper
 - [ ] **Regression testing** - Ensure all existing workflows continue to pass
 
-**Commit 14: Runtime Estimation Interface**
+**Commit 15: Runtime Estimation Interface**
 - [ ] **estimate_runtime() method** - Add to Action base class for progress calculation
 - [ ] **Default estimation** - 1-second default for actions without specific estimates
 - [ ] **Progress foundation** - Basic estimation without user interface
 
-**Commit 15: Dry-Run Mode Status Logic**
+**Commit 16: Dry-Run Mode Status Logic**
 - [ ] **WOULD_EXECUTE status** - Implement dry-run equivalent of EXECUTES
 - [ ] **WOULD_SKIP status** - Implement dry-run equivalent of SKIPS  
 - [ ] **Mode differentiation** - Proper status based on run vs dry-run mode
 
-**Commit 16: Append-Semantics File Support**
+**Commit 17: Append-Semantics File Support**
 - [ ] **get_output_contribution_key()** - Action method for append-semantics identification
 - [ ] **has_existing_contribution()** - Check if action's section exists in append-semantics files
 - [ ] **FileManager enhancement** - Handle metadata.json style files with action-specific sections
 
-**Commit 17: Progress Estimation Foundation**
+**Commit 18: Progress Estimation Foundation**
 - [ ] **Progress calculation** - Aggregate runtime estimates for workflow progress tracking
 - [ ] **Background tracking** - Progress computation without user interface display
 - [ ] **Accuracy testing** - Validate progress calculation with various workflow scenarios
 
-**Commit 18: Integration Testing**
+**Commit 19: Integration Testing**
 - [ ] **End-to-end validation** - Complete logging system integration testing
 - [ ] **Matrix workflows** - Multi-action workflow testing with all status types
 - [ ] **100% coverage** - Maintain comprehensive test coverage for all logging features
 
-**Commit 19: CLI Logging Parameters**
-- [ ] **--log-file parameter** - CLI option for log file output destination
-- [ ] **--log-level parameter** - Control logging verbosity (none, summary, all)
-- [ ] **Parameter validation** - Proper CLI argument parsing and error handling
+**Commit 20: CLI Logging Parameters Enhancement**
+- [ ] **Enhanced CLI options** - Improve CLI based on real-world testing feedback
+- [ ] **Better error messages** - Refine error handling discovered during external package testing
+- [ ] **Path resolution improvements** - Handle edge cases found during real usage
 
-**Commit 20: ProgressReporter Foundation**
+**Commit 21: ProgressReporter Foundation**
 - [ ] **ProgressReporter class** - Click integration for progress bar display
 - [ ] **Basic structure** - Progress bar initialization and configuration
 - [ ] **No live updates** - Static progress structure without real-time updates yet
 
-**Commit 21: Live Progress Integration**  
+**Commit 22: Live Progress Integration**  
 - [ ] **Real-time updates** - Connect progress reporter to workflow execution
 - [ ] **Action completion** - Update progress as actions complete
 - [ ] **Optional display** - Toggle progress bars based on CLI parameters
 
-**Commit 22: Summary Report Generation**
+**Commit 23: Summary Report Generation**
 - [ ] **Status aggregation** - Count tasks by status type (EXECUTES, SKIPS, etc.)
 - [ ] **Summary formatting** - Clear report with counts, runtime, resource usage
 - [ ] **Report accuracy** - Comprehensive testing for summary calculation

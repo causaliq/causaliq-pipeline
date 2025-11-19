@@ -32,6 +32,20 @@ Robust workflow validation against JSON schemas with detailed error reporting.
 - **load_schema/load_workflow_file** - File loading utilities
 - **WorkflowValidationError** - Validation-specific exceptions
 
+### [Status System](api/status.md)
+Comprehensive task execution status enumeration for workflow logging and monitoring.
+
+- **TaskStatus** - Standardized status reporting for all task execution outcomes
+- **Status properties** - Categorization helpers (success, error, execution, dry-run)
+- **Status definitions** - Complete coverage of execution, comparison, and error statuses
+
+### [Logging System](api/logging.md)
+Centralized logging infrastructure with multiple output destinations for workflow execution monitoring.
+
+- **WorkflowLogger** - Multi-destination logging with file/terminal output support
+- **LogLevel** - Verbosity control (NONE, SUMMARY, ALL)
+- **Output configuration** - Flexible logging destination management
+
 ### [CLI Interface](api/cli.md)
 Command-line interface for workflow execution and management.
 

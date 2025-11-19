@@ -4,7 +4,9 @@ causaliq-workflow: Template package for CausalIQ repos
 
 # Import core functionality
 from .action import Action, ActionExecutionError, ActionValidationError
+from .logger import LogLevel, WorkflowLogger  # noqa: F401
 from .registry import ActionRegistry, ActionRegistryError, WorkflowContext
+from .status import TaskStatus  # noqa: F401
 from .workflow import WorkflowExecutionError, WorkflowExecutor
 
 __version__ = "0.1.0"
