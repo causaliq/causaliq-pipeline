@@ -49,6 +49,7 @@ nav:
     - Action Architecture: design/action_architecture_design.md
     - Algorithm Registry: design/action_auto_discovery_design.md
     - Workflow Executor: design/workflow_executor_design.md
+    - Logging Architecture: design/logging_architecture_design.md
   - API Reference:
     - Overview: api.md
     - Action Framework: api/actions.md

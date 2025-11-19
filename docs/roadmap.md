@@ -104,14 +104,145 @@ Last updated: 2025-11-18
 - [x] **Error handling** - Comprehensive action discovery and execution error management
 - [x] **Plugin architecture** - Zero-configuration plugin system with test action package demonstrating pattern
 
-**Commit 4: CLI Implementation & Mode Support** 🔑 **NEXT**
-- [ ] **`causaliq-workflow` command** - Complete CLI with workflow file execution using ActionRegistry
-- [ ] **Mode-based operation** - `--mode=dry-run|run|compare` for validation, execution, and testing
-- [ ] **Parameter injection** - CLI parameters available as template variables via WorkflowExecutor
-- [ ] **CLI error handling** - User-friendly error reporting for workflow and action failures
-- [ ] **Workflow validation** - Pre-execution validation with clear error messages via ActionRegistry
+**Commit 4: Workflow Variable Required Parameters** ✅ **COMPLETED**
+- [x] **None value support** - Workflow variables with `null` values require CLI specification
+- [x] **Required parameter validation** - Clear error messages when required variables missing
+- [x] **Template integration** - Workflow variables included in template validation context
+- [x] **Schema enhancement** - JSON schema supports `null` values for mandatory specification
+- [x] **Comprehensive testing** - Full coverage of default values, CLI overrides, and validation
 
-**Commit 5: External Package Integration & Demo**
+**Commit 5: TaskStatus Enum Foundation** 🔑 **NEXT** - [Design Note: docs/design/logging_architecture_design.md]
+- [ ] **TaskStatus enum** - Define all 10 status types (EXECUTES, WOULD_EXECUTE, SKIPS, etc.)
+- [ ] **Status validation** - Unit tests for enum definitions and completeness
+- [ ] **Foundation only** - Pure enum implementation, no behavior changes
+
+**Commit 6: WorkflowLogger Core Structure**
+- [ ] **WorkflowLogger class** - Basic constructor with file/terminal output configuration
+- [ ] **Output destinations** - Support for multiple logging targets (file, terminal, tests)
+- [ ] **Basic methods** - Logger instantiation and configuration, no task-specific logic yet
+
+**Commit 7: Action Interface Extension**
+- [ ] **Optional logger parameter** - Add `logger` to `Action.run()` method signature
+- [ ] **Backward compatibility** - All existing actions accept but ignore logger
+- [ ] **Interface validation** - Confirm all actions work unchanged with new signature
+
+**Commit 8: Basic Task Logging**
+- [ ] **log_task() method** - Implement formatted message output with status/runtime/files
+- [ ] **Message formatting** - Standardized format: timestamp, action, status, description
+- [ ] **Comprehensive testing** - All status types with various input/output scenarios
+
+**Commit 9: Action Output File Interface**
+- [ ] **get_output_files() method** - Add to Action base class for file discovery
+- [ ] **Default implementation** - Empty list for actions without specific outputs
+- [ ] **Test integration** - Implement in dummy action for validation
+
+**Commit 10: FileManager for Output Detection**
+- [ ] **FileManager class** - File existence and comparison utilities
+- [ ] **Traditional file logic** - Basic exists/missing detection for replace-semantics files
+- [ ] **Isolated testing** - File operations without workflow integration
+
+**Commit 11: Skip Logic Foundation**
+- [ ] **should_skip_action() method** - Determine if action can skip based on existing outputs
+- [ ] **Traditional files only** - Skip logic for replace-semantics files (no append-semantics yet)
+- [ ] **Comprehensive scenarios** - Test various file existence and modification patterns
+
+**Commit 12: ActionExecutor Core Structure**
+- [ ] **ActionExecutor class** - Wrapper for action execution with status determination
+- [ ] **Status logic** - EXECUTES vs SKIPS for traditional files in run mode
+- [ ] **Mock integration** - Test execution wrapper without WorkflowExecutor changes
+
+**Commit 13: WorkflowExecutor Logger Integration**
+- [ ] **Logger creation** - WorkflowExecutor creates and configures WorkflowLogger
+- [ ] **ActionExecutor usage** - Replace direct action calls with ActionExecutor wrapper
+- [ ] **Regression testing** - Ensure all existing workflows continue to pass
+
+**Commit 14: Runtime Estimation Interface**
+- [ ] **estimate_runtime() method** - Add to Action base class for progress calculation
+- [ ] **Default estimation** - 1-second default for actions without specific estimates
+- [ ] **Progress foundation** - Basic estimation without user interface
+
+**Commit 15: Dry-Run Mode Status Logic**
+- [ ] **WOULD_EXECUTE status** - Implement dry-run equivalent of EXECUTES
+- [ ] **WOULD_SKIP status** - Implement dry-run equivalent of SKIPS  
+- [ ] **Mode differentiation** - Proper status based on run vs dry-run mode
+
+**Commit 16: Append-Semantics File Support**
+- [ ] **get_output_contribution_key()** - Action method for append-semantics identification
+- [ ] **has_existing_contribution()** - Check if action's section exists in append-semantics files
+- [ ] **FileManager enhancement** - Handle metadata.json style files with action-specific sections
+
+**Commit 17: Progress Estimation Foundation**
+- [ ] **Progress calculation** - Aggregate runtime estimates for workflow progress tracking
+- [ ] **Background tracking** - Progress computation without user interface display
+- [ ] **Accuracy testing** - Validate progress calculation with various workflow scenarios
+
+**Commit 18: Integration Testing**
+- [ ] **End-to-end validation** - Complete logging system integration testing
+- [ ] **Matrix workflows** - Multi-action workflow testing with all status types
+- [ ] **100% coverage** - Maintain comprehensive test coverage for all logging features
+
+**Commit 19: CLI Logging Parameters**
+- [ ] **--log-file parameter** - CLI option for log file output destination
+- [ ] **--log-level parameter** - Control logging verbosity (none, summary, all)
+- [ ] **Parameter validation** - Proper CLI argument parsing and error handling
+
+**Commit 20: ProgressReporter Foundation**
+- [ ] **ProgressReporter class** - Click integration for progress bar display
+- [ ] **Basic structure** - Progress bar initialization and configuration
+- [ ] **No live updates** - Static progress structure without real-time updates yet
+
+**Commit 21: Live Progress Integration**  
+- [ ] **Real-time updates** - Connect progress reporter to workflow execution
+- [ ] **Action completion** - Update progress as actions complete
+- [ ] **Optional display** - Toggle progress bars based on CLI parameters
+
+**Commit 22: Summary Report Generation**
+- [ ] **Status aggregation** - Count tasks by status type (EXECUTES, SKIPS, etc.)
+- [ ] **Summary formatting** - Clear report with counts, runtime, resource usage
+- [ ] **Report accuracy** - Comprehensive testing for summary calculation
+
+**Commit 23: Error Display Enhancement**
+- [ ] **FAILED status formatting** - User-friendly error messages with actionable suggestions
+- [ ] **INVALID_* status details** - Clear parameter validation error reporting
+- [ ] **Error summary** - Aggregate error information for debugging
+
+**Commit 24: CLI Integration Testing**
+- [ ] **Complete CLI testing** - All logging features with file output verification
+- [ ] **Performance validation** - Logging overhead measurement and optimization
+- [ ] **Real workflow execution** - End-to-end testing with actual causal discovery workflows
+
+**Commit 25: File Comparison Foundation**
+- [ ] **Comparison utilities** - Basic file diff and comparison logic in FileManager
+- [ ] **Text file diffs** - Generate meaningful comparisons for various file types
+- [ ] **Isolated testing** - File comparison without execution integration
+
+**Commit 26: Compare Mode Status Logic**
+- [ ] **IDENTICAL status** - Implement when re-execution produces same outputs
+- [ ] **DIFFERENT status** - Implement when re-execution produces changed outputs
+- [ ] **Compare mode execution** - New execution path for output comparison
+
+**Commit 27: Timeout Handling Infrastructure**
+- [ ] **Timeout configuration** - Per-action timeout settings and monitoring
+- [ ] **TIMED_OUT status** - Graceful termination with timeout status reporting
+- [ ] **Cleanup logic** - Proper resource cleanup when actions exceed timeout
+
+**Commit 28: Resource Monitoring Foundation**
+- [ ] **Memory monitoring** - Track memory usage during action execution
+- [ ] **CPU monitoring** - Track CPU utilization and report in log messages
+- [ ] **Resource reporting** - Include resource usage in status messages
+
+**Commit 29: Advanced Progress Features**
+- [ ] **Estimated completion** - Real-time estimates based on action progress
+- [ ] **Resource display** - Memory/CPU usage in progress indicators
+- [ ] **Smart updates** - Adaptive progress update frequency based on action complexity
+
+**Commit 30: Advanced Features Integration**
+- [ ] **Compare mode testing** - Complete integration testing for output comparison
+- [ ] **Resource monitoring validation** - Accuracy testing for memory/CPU tracking
+- [ ] **Performance optimization** - Final performance tuning for large workflows
+- [ ] **Documentation updates** - Complete documentation for all advanced logging features
+
+**Commit 9: External Package Integration & Demo**
 - [ ] **causaliq-discovery package** - Simple structure learning action (PC algorithm)
 - [ ] **Entry point registration** - Dynamic discovery working with external package
 - [ ] **End-to-end workflow** - Complete example: CLI → ActionRegistry → External action → Results
