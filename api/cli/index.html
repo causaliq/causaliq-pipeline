@@ -1729,7 +1729,7 @@
             <b><code><a class="autorefs autorefs-internal" title="            cli (causaliq_workflow.cli.cli)" href="#causaliq_workflow.cli.cli">cli</a></code></b>
             –
             <div class="doc-md-description">
-              <p>Simple CLI example.</p>
+              <p>Execute CausalIQ workflow files.</p>
             </div>
           </li>
           <li class="doc-section-item field-body">
@@ -1764,13 +1764,19 @@
 
 
 </h4>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">cli</span><span class="p">(</span><span class="n"><span title="causaliq_workflow.cli.cli(name)">name</span></span><span class="p">:</span> <span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n"><span title="causaliq_workflow.cli.cli(greet)">greet</span></span><span class="p">:</span> <span class="n"><span title="str">str</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">cli</span><span class="p">(</span><span class="n"><span title="causaliq_workflow.cli.cli(workflow_file)">workflow_file</span></span><span class="p">:</span> <span class="n"><span title="pathlib.Path">Path</span></span><span class="p">,</span> <span class="n"><span title="causaliq_workflow.cli.cli(mode)">mode</span></span><span class="p">:</span> <span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n"><span title="causaliq_workflow.cli.cli(log_level)">log_level</span></span><span class="p">:</span> <span class="n"><span title="str">str</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
 
-        <p>Simple CLI example.</p>
-<p>NAME is the person to greet</p>
+        <p>Execute CausalIQ workflow files.</p>
+<p>WORKFLOW_FILE is the path to a YAML workflow file to execute.</p>
+
+
+<p><span class="doc-section-title">Examples:</span></p>
+    <p>causaliq-workflow experiment.yml              # Validate and preview
+causaliq-workflow experiment.yml --mode=run  # Execute workflow
+causaliq-workflow experiment.yml --mode=dry-run --log-level=all              # Detailed preview</p>
 
           
 

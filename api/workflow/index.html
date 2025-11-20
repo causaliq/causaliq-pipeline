@@ -1071,6 +1071,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#causaliq_workflow.workflow.WorkflowExecutor.execute_workflow(step_logger)" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        step_logger
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1543,6 +1554,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#causaliq_workflow.workflow.WorkflowExecutor.execute_workflow(step_logger)" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        step_logger
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1925,6 +1947,7 @@ product. Each combination becomes a separate job configuration.</p>
     <span class="n"><a class="autorefs autorefs-internal" title="workflow (causaliq_workflow.workflow.WorkflowExecutor.execute_workflow(workflow))" href="#causaliq_workflow.workflow.WorkflowExecutor.execute_workflow(workflow)">workflow</a></span><span class="p">:</span> <span class="n"><span title="typing.Dict">Dict</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n"><span title="typing.Any">Any</span></span><span class="p">],</span>
     <span class="n"><a class="autorefs autorefs-internal" title="mode (causaliq_workflow.workflow.WorkflowExecutor.execute_workflow(mode))" href="#causaliq_workflow.workflow.WorkflowExecutor.execute_workflow(mode)">mode</a></span><span class="p">:</span> <span class="n"><span title="str">str</span></span> <span class="o">=</span> <span class="s2">&quot;dry-run&quot;</span><span class="p">,</span>
     <span class="n"><a class="autorefs autorefs-internal" title="cli_params (causaliq_workflow.workflow.WorkflowExecutor.execute_workflow(cli_params))" href="#causaliq_workflow.workflow.WorkflowExecutor.execute_workflow(cli_params)">cli_params</a></span><span class="p">:</span> <span class="n"><span title="typing.Optional">Optional</span></span><span class="p">[</span><span class="n"><span title="typing.Dict">Dict</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n"><span title="typing.Any">Any</span></span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n"><a class="autorefs autorefs-internal" title="step_logger (causaliq_workflow.workflow.WorkflowExecutor.execute_workflow(step_logger))" href="#causaliq_workflow.workflow.WorkflowExecutor.execute_workflow(step_logger)">step_logger</a></span><span class="p">:</span> <span class="n"><span title="typing.Optional">Optional</span></span><span class="p">[</span><span class="n"><span title="typing.Callable">Callable</span></span><span class="p">[[</span><span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n"><span title="str">str</span></span><span class="p">],</span> <span class="kc">None</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="typing.List">List</span></span><span class="p">[</span><span class="n"><span title="typing.Dict">Dict</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n"><span title="typing.Any">Any</span></span><span class="p">]]</span>
 </code></pre></div>
 
@@ -1961,6 +1984,16 @@ product. Each combination becomes a separate job configuration.</p>
           –
           <div class="doc-md-description">
             <p>Additional parameters from CLI</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+<h5 id="causaliq_workflow.workflow.WorkflowExecutor.execute_workflow(step_logger)" class="doc doc-heading doc-heading-parameter">              <b><code>step_logger</code></b>
+</h5>              (<code><span title="typing.Optional">Optional</span>[<span title="typing.Callable">Callable</span>[[<span title="str">str</span>, <span title="str">str</span>, <span title="str">str</span>], None]]</code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Optional function to log step execution</p>
           </div>
         </li>
     </ul>
